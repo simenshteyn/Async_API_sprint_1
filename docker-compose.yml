@@ -1,0 +1,68 @@
+version: '3.8'
+
+volumes:
+  postgres_data:
+#  static_volume:
+#  media_volume:
+
+services:
+  ma_postgres:
+    image: postgres:13.4
+    container_name: ma_postgres
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+#      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
+    env_file:
+      - .env
+    expose:
+      - 5432
+    ports:
+      - "5432:5432"
+
+  ma_es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: es01
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - ./elasticdb/:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+
+  ma_redis:
+    image: 'redis:6.2.6'
+    container_name: ma_redis
+    command: redis-server --requirepass # если будет пароль
+    ports:
+      - '6379:6379'
+
+#
+#  ma_etl:
+#    build: postgres_to_es/
+#    deploy:
+#      restart_policy:
+#        condition: any
+#        delay: 5s
+#        window: 5s
+#    depends_on:
+#      - ma_postgres
+#      - ma_es01
+#    env_file:
+#      - .env
+#    volumes:
+#      - ./postgres_to_es/volumes/etl.log:/sites/etl.log
+#      - ./postgres_to_es/volumes/:/sites/states/
+
+#  ma_nginx:
+#    image: nginx:1.19.2
+#    container_name: ma_nginx
+#    depends_on:
+#      - ma_web
+#    volumes:
+#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+#      - ./nginx/sites-enabled/:/etc/nginx/sites-enabled/
+#      - static_volume:/sites/static/
+#    ports:
+#      - "80:80"
