@@ -8,10 +8,10 @@ from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
 from src.config import dsl, es_conf
-from etl.pq_loader_film_work import PostgresLoader
-from etl.utils import backoff
-from etl.es import EsSaver
-from etl.state import State, JsonFileStorage
+from pq_loader_film_work import PostgresLoader
+from utils import backoff
+from es import EsSaver
+from state import State, JsonFileStorage
 
 logger = logging.getLogger('LoaderStart')
 
