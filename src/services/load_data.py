@@ -8,36 +8,37 @@ from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
 from src.config import dsl, es_conf
-from pq_loader_film_work import PostgresLoader as pq_load_film
-from pq_loader_genre import PostgresLoader as pq_load_genre
-from utils import backoff
-from es import EsSaver
-
+from etl.pq_loader_film_work import PostgresLoader
+from etl.utils import backoff
+from etl.es import EsSaver
+from etl.state import State, JsonFileStorage
 
 logger = logging.getLogger('LoaderStart')
 
 
-def load_from_postgres(pg_conn: _connection, func: callable) -> list:
+def load_from_postgres(pg_conn: _connection, name_index: str) -> list:
     """Основной метод загрузки данных из Postgres"""
-    postgres_loader = func(pg_conn)
-    data = postgres_loader.loader()
+    postgres_loader = PostgresLoader(pg_conn)
+    data = getattr(postgres_loader, f'loader_{name_index}')()
     return data
 
 
 if __name__ == '__main__':
     @backoff()
-    def query_postgres_film(func: callable) -> list:
+    def query_postgres_film(name_index) -> list:
         with closing(psycopg2.connect(**dsl, cursor_factory=DictCursor)) as pg_conn:
-            logger.info(f'{datetime.now()}\n\nPostgreSQL connection is open. Start load {func} data')
-            load_pq = load_from_postgres(pg_conn, func)
+            logger.info(f'{datetime.now()}\n\nPostgreSQL connection is open. Start load {name_index} data')
+            load_pq = load_from_postgres(pg_conn, name_index)
         return load_pq
 
 
-    def save_elastic(pq_func: callable, schemas: str, name_index: str) -> None:
+    def save_elastic(schemas: str, name_index: str) -> None:
         logger.info(f'{datetime.now()}\n\nElasticSearch connection is open. Start load {name_index} data')
         EsSaver(es_conf).create_index(schemas, name_index=name_index)
-        EsSaver(es_conf).load(query_postgres_film(pq_func), name_index=name_index)
+        EsSaver(es_conf).load(query_postgres_film(name_index), name_index=name_index)
 
-    save_elastic(pq_func=pq_load_film, schemas='schemas_es/schemas_film.json', name_index='movies')
-    save_elastic(pq_func=pq_load_genre, schemas='schemas_es/schemas_genre.json', name_index='genre')
+    save_elastic(schemas='schemas_es/schemas_film.json', name_index='movies')
+    save_elastic(schemas='schemas_es/schemas_genre.json', name_index='genre')
+
+    State(JsonFileStorage('PostgresDataState.txt')).set_state(str('my_key'), value=str(datetime.now()))
 

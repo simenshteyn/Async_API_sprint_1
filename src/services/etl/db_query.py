@@ -6,7 +6,7 @@ load_person_id = f'''SELECT DISTINCT id
 load_film_id = f'''SELECT DISTINCT fw.id
                     FROM content.film_work as fw
                     LEFT JOIN content.person_film_work as pfw ON pfw.film_work_id = fw.id
-                    WHERE pfw.person_id IN ({self.load_person_id()})
+                    WHERE pfw.person_id IN (%s)
                     GROUP BY fw.id
                     '''
 

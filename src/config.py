@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Logging settings
-logging.basicConfig(filename='etl.log', level=os.getenv('LOGGING_LEVEL'))
+logging.basicConfig(filename='services/etl.log', level=os.getenv('LOGGING_LEVEL'))
 logger = logging.getLogger()
 logger.setLevel(level=os.getenv('LOGGING_LEVEL'))
 
