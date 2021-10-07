@@ -2,7 +2,7 @@ FROM python:3.9.7-slim-buster
 WORKDIR /sites
 COPY requirements.txt /sites
 RUN pip install -r /sites/requirements.txt --no-cache-dir
-COPY config.py /sites
+COPY config.py /sites/src
 COPY services/etl /sites
 COPY services/schemas_es /sites
 EXPOSE 8000
