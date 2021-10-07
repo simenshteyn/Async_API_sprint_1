@@ -38,22 +38,21 @@ services:
     ports:
       - '6379:6379'
 
-#
-#  ma_etl:
-#    build: postgres_to_es/
-#    deploy:
-#      restart_policy:
-#        condition: any
-#        delay: 5s
-#        window: 5s
-#    depends_on:
-#      - ma_postgres
-#      - ma_es01
-#    env_file:
-#      - .env
-#    volumes:
-#      - ./postgres_to_es/volumes/etl.log:/sites/etl.log
-#      - ./postgres_to_es/volumes/:/sites/states/
+  ma_etl:
+    build: src/services
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
+        window: 5s
+    depends_on:
+      - ma_postgres
+      - ma_es01
+    env_file:
+      - .env
+    volumes:
+      - ./postgres_to_es/volumes/etl.log:/sites/etl.log
+      - ./postgres_to_es/volumes/:/sites/states/
 
 #  ma_nginx:
 #    image: nginx:1.19.2
