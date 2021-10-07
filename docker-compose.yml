@@ -12,7 +12,7 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-#      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
+      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
     env_file:
       - .env
     expose:
@@ -27,7 +27,7 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
-      - ./elasticdb/:/usr/share/elasticsearch/data
+      - ./volumes/elasticdb/:/usr/share/elasticsearch/data
     ports:
       - "9200:9200"
 
@@ -51,17 +51,5 @@ services:
     env_file:
       - .env
     volumes:
-      - ./postgres_to_es/volumes/etl.log:/sites/etl.log
-      - ./postgres_to_es/volumes/:/sites/states/
-
-#  ma_nginx:
-#    image: nginx:1.19.2
-#    container_name: ma_nginx
-#    depends_on:
-#      - ma_web
-#    volumes:
-#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-#      - ./nginx/sites-enabled/:/etc/nginx/sites-enabled/
-#      - static_volume:/sites/static/
-#    ports:
-#      - "80:80"
+      - ./volumes/ETL/etl.log:/sites/etl.log
+      - ./volumes/ETL/:/sites/states/
