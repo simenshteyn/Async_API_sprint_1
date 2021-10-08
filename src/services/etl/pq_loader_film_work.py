@@ -1,6 +1,8 @@
-from datetime import datetime
+import re
+
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
+
 from .state import JsonFileStorage, State
 from .db_query import load_person_q, load_film_id, full_load, query_all_genre
 from src.models.models import Film, Genre, Person
@@ -25,7 +27,6 @@ class PostgresLoader:
         query = load_film_id % self.load_person_id()
         if self.state_key is None:
             return query
-
         inx = query.rfind(
             f'WHERE pfw.person_id IN ({self.load_person_id()})'
         )
@@ -37,7 +38,7 @@ class PostgresLoader:
     def load_genre(self) -> str:
         if self.state_key is None:
             return query_all_genre
-        inx = query_all_genre.rfind('FROM content.genre')
+        inx = re.search('FROM content.genre', query_all_genre).end()
         return f"{query_all_genre[:inx]} WHERE updated_at > '{self.state_key}' {query_all_genre[inx:]}"
 
     def load_person(self) -> str:
@@ -45,7 +46,7 @@ class PostgresLoader:
         query = f"{load_person_q[:inx + 2]}, full_name, birth_date {load_person_q[inx + 2:]}"
         if self.state_key is None:
             return query
-        inx = query.rfind('FROM content.person')
+        inx = re.search('FROM content.person', query).end()
         return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
