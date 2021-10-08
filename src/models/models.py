@@ -42,5 +42,5 @@ class Genre(BaseModel):
 class Person(BaseModel):
     id              : Union[int, str, UUID]
     full_name       : str
-    birth_date      : date
-    roles           : List[str]  # под вопросом
+    birth_date      : Optional[date] = None
+    # roles           : List[str]  # под вопросом

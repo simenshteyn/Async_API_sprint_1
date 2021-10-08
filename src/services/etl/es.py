@@ -3,7 +3,8 @@ import logging
 from datetime import datetime
 
 from elasticsearch import Elasticsearch
-from .utils import backoff
+from utils import backoff
+
 
 logger = logging.getLogger('ESLoader')
 
@@ -47,6 +48,5 @@ class EsSaver:
                 if len(self.movies_list) == 50:
                     self.load_data(name_index)
                     self.movies_list.clear()
-                print(row)
             self.load_data(name_index)
             break

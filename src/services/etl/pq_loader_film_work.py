@@ -2,8 +2,8 @@ from datetime import datetime
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 from .state import JsonFileStorage, State
-from .db_query import load_person_id, load_film_id, full_load, query_all_genre
-from src.models.models import Film, Genre
+from .db_query import load_person_q, load_film_id, full_load, query_all_genre
+from src.models.models import Film, Genre, Person
 
 
 class PostgresLoader:
@@ -18,7 +18,7 @@ class PostgresLoader:
 
     def load_person_id(self) -> str:
         """Вложенный запрос на получение id персон, думаю функция тут лишняя """
-        return load_person_id
+        return load_person_q
 
     def load_film_work_id(self) -> str:
         """Вложенный запрос на получение id film_work"""
@@ -31,7 +31,7 @@ class PostgresLoader:
         )
         return f"{query[:inx]} AND updated_at > '{self.state_key}' {query[inx:]}"
 
-    def load_all_film_work_person(self):
+    def load_all_film_work_person(self) -> str:
         return full_load % self.load_film_work_id()
 
     def load_genre(self) -> str:
@@ -41,8 +41,8 @@ class PostgresLoader:
         return f"{query_all_genre[:inx]} WHERE updated_at > '{self.state_key}' {query_all_genre[inx:]}"
 
     def load_person(self) -> str:
-        inx = load_person_id.rfind('SELECT DISTINCT id')
-        query = f"{load_person_id[:inx]}, full_name, birth_date {load_person_id[inx:]}"
+        inx = load_person_q.find('id')
+        query = f"{load_person_q[:inx + 2]}, full_name, birth_date {load_person_q[inx + 2:]}"
         if self.state_key is None:
             return query
         inx = query.rfind('FROM content.person')
@@ -96,7 +96,7 @@ class PostgresLoader:
 
     def loader_person(self) -> list:
         """Запрос на получение всех жанров"""
-        self.cursor.execute(self.load_genre())
+        self.cursor.execute(self.load_person())
 
         while True:
             rows = self.cursor.fetchmany(self.batch_size)
@@ -104,10 +104,10 @@ class PostgresLoader:
                 break
 
             for row in rows:
-                d = Genre(
+                d = Person(
                     id              = dict(row).get('id'),
-                    full_name       = dict(row).get('name'),
-                    birth_date      = dict(row).get('description'),
+                    full_name       = dict(row).get('full_name'),
+                    birth_date      = dict(row).get('birth_date'),
                 )
                 self.data.append(d.dict())
 

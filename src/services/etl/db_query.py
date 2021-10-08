@@ -1,4 +1,4 @@
-load_person_id = f'''SELECT DISTINCT id
+load_person_q = f'''SELECT DISTINCT id
                     FROM content.person
                     GROUP BY id
                     '''
