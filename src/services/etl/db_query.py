@@ -3,6 +3,13 @@ load_person_q = f'''SELECT DISTINCT id
                     GROUP BY id
                     '''
 
+load_person_role = f'''SELECT DISTINCT p.id, p.full_name, p.birth_date,
+                    ARRAY_AGG(jsonb_build_object(pfw.role, pfw.film_work_id)) AS roles
+                    FROM content.person as p
+                    LEFT JOIN content.person_film_work as pfw ON p.id = pfw.person_id
+                    GROUP BY p.id
+                    '''
+
 load_film_id = f'''SELECT DISTINCT fw.id
                     FROM content.film_work as fw
                     LEFT JOIN content.person_film_work as pfw ON pfw.film_work_id = fw.id

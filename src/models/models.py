@@ -43,4 +43,4 @@ class Person(BaseModel):
     id              : Union[int, str, UUID]
     full_name       : str
     birth_date      : Optional[date] = None
-    # roles           : List[str]  # под вопросом
+    roles           : list[dict]  # под вопросом
