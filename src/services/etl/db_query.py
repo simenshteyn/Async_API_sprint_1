@@ -1,12 +1,19 @@
-load_person_id = f'''SELECT DISTINCT id
+load_person_q = f'''SELECT DISTINCT id
                     FROM content.person
                     GROUP BY id
+                    '''
+
+load_person_role = f'''SELECT DISTINCT p.id, p.full_name, p.birth_date,
+                    ARRAY_AGG(jsonb_build_object(pfw.role, pfw.film_work_id)) AS roles
+                    FROM content.person as p
+                    LEFT JOIN content.person_film_work as pfw ON p.id = pfw.person_id
+                    GROUP BY p.id
                     '''
 
 load_film_id = f'''SELECT DISTINCT fw.id
                     FROM content.film_work as fw
                     LEFT JOIN content.person_film_work as pfw ON pfw.film_work_id = fw.id
-                    WHERE pfw.person_id IN ({load_person_id})
+                    WHERE pfw.person_id IN (%s)
                     GROUP BY fw.id
                     '''
 
@@ -27,3 +34,7 @@ full_load = f'''SELECT DISTINCT fw.id, fw.title, fw.description, fw.rating, fw.t
                             WHERE fw.id IN (%s)
                             GROUP BY fw.id
                             ORDER BY fw.updated_at;'''
+
+query_all_genre = f'''SELECT id, name, description
+                 FROM content.genre
+                 ORDER BY created_at;'''

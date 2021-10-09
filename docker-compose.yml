@@ -9,7 +9,7 @@ services:
     container_name: ma_postgres
     restart: always
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - ./volumes/postgres_data:/var/lib/postgresql/data/
       - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
     env_file:
       - .env
@@ -51,3 +51,12 @@ services:
     volumes:
       - ./volumes/ETL/etl.log:/sites/etl.log
       - ./volumes/ETL/:/sites/states/
+
+#  ma_web:
+#    build: .
+#    restart: always
+#    container_name: ma_web
+#    depends_on:
+#      - ma_postgres
+#      - ma_redis
+#      - ma_es01

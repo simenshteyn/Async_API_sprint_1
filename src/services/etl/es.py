@@ -1,11 +1,9 @@
 import json
 import logging
-import time
 from datetime import datetime
 
 from elasticsearch import Elasticsearch
 from utils import backoff
-from state import State, JsonFileStorage
 
 
 logger = logging.getLogger('ESLoader')
@@ -18,19 +16,19 @@ class EsSaver:
         self.key = state_key
 
     @backoff()
-    def create_index(self, file_path) -> None:
+    def create_index(self, file_path, name_index) -> None:
         with open(file_path, 'r') as file:
             f = json.load(file)
-        if self.client.indices.exists(index="movies"):
+        if self.client.indices.exists(index=name_index):
             logger.warning(f'{datetime.now()}\n\nindex movies already exist:')
 
-        self.client.index(index='movies', body=f)
-        
-    @backoff()  # перенес по отдельности: для подключения и загрузки, что бы backoff отрабатывал в нужном месте
-    def load_data(self) -> None:
-        self.client.bulk(body='\n'.join(self.movies_list) + '\n', index='movies', refresh=True)
+        self.client.index(index=name_index, body=f)
 
-    def load(self, query) -> None:
+    @backoff()
+    def load_data(self, name_index) -> None:
+        self.client.bulk(body='\n'.join(self.movies_list) + '\n', index=name_index, refresh=True)
+
+    def load(self, query, name_index) -> None:
         while query:
             rows = iter(query)
             for row in rows:
@@ -39,7 +37,7 @@ class EsSaver:
                         json.dumps(
                             {
                                 'index': {
-                                    '_index': 'movies',
+                                    '_index': name_index,
                                     '_id': row['id']
                                 }
                             }
@@ -48,8 +46,7 @@ class EsSaver:
                     ]
                 )
                 if len(self.movies_list) == 50:
-                    self.load_data()
+                    self.load_data(name_index)
                     self.movies_list.clear()
-            self.load_data()
+            self.load_data(name_index)
             break
-        State(JsonFileStorage('states/PostgresData.txt')).set_state(str(self.key), value=str(datetime.now()))
