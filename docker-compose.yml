@@ -2,8 +2,6 @@ version: '3.8'
 
 volumes:
   postgres_data:
-#  static_volume:
-#  media_volume:
 
 services:
   ma_postgres:
