@@ -2,8 +2,7 @@ version: '3.8'
 
 volumes:
   postgres_data:
-#  static_volume:
-#  media_volume:
+
 
 services:
   ma_postgres:
@@ -12,7 +11,7 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-#      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
+      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
     env_file:
       - .env
     expose:

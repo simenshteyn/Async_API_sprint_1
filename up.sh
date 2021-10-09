@@ -1,4 +1,5 @@
 #!/bin/bash
+python -m venv venv
 cp .env.sample .env
 docker-compose up --build -d ma_postgres
 sleep 5
