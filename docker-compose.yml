@@ -42,7 +42,7 @@ services:
 #        condition: any
 #        delay: 5s
 #        window: 5s
-    restart: always
+    restart: unless-stopped
     depends_on:
       - ma_postgres
       - ma_es01
