@@ -3,13 +3,9 @@ echo "Создание структуры папок для запуска ETL/E
 mkdir volumes
 mkdir volumes/elasticdb
 mkdir volumes/ETL
+mkdir volumes/postgres_data
 touch volumes/ETL/etl.log
 cp .env.sample .env
-mkdir src/services/etl/src
-cp -r src/models src/services/etl/src/
-cp -r src/services/schemas_es src/services/etl/src/
-cp src/config.py src/services/etl/src/
-cp requirements.txt src/services/
 docker-compose up --build -d ma_postgres
 sleep 5
 echo "Начало загрузки данных в postgres"
@@ -21,8 +17,5 @@ cd ..
 #docker-compose up --build -d ma_nginx
 docker-compose up --build -d ma_es01
 sleep 5
-echo "Копирование папок и файлов для сборки образа ETL"
+echo "ETL"
 docker-compose up --build -d ma_etl
-sleep 20
-rm -r src/services/etl/src
-rm src/services/requirements.txt
