@@ -16,6 +16,8 @@ cd sqlite_to_postgres/ || exit
 cd ..
 #echo "Запуск Nginx"
 #docker-compose up --build -d ma_nginx
+echo 'Start Redis'
+docker-compose up --build -d ma_redis
 docker-compose up --build -d ma_es01
 sleep 5
 echo "ETL"

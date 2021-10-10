@@ -4,9 +4,10 @@ from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
-from src.api.v1 import film
-from src.core import config
-from src.db import redis, elastic
+from api.v1 import film
+from core import config
+from db import elastic
+from db import redis
 
 app = FastAPI(
     title=config.PROJECT_NAME,
