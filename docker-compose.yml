@@ -37,11 +37,12 @@ services:
 
   ma_etl:
     build: ./postgres_to_es
-    deploy:
-      restart_policy:
-        condition: any
-        delay: 5s
-        window: 5s
+#    deploy:
+#      restart_policy:
+#        condition: any
+#        delay: 5s
+#        window: 5s
+    restart: always
     depends_on:
       - ma_postgres
       - ma_es01
