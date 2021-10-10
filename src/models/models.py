@@ -27,4 +27,3 @@ class Film(BaseModel):
     actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
     writers         : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
     directors       : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-
