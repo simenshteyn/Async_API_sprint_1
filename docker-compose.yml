@@ -1,7 +1,7 @@
 version: '3.8'
 
-volumes:
-  postgres_data:
+#volumes:
+#  postgres_data:
 
 services:
   ma_postgres:
@@ -52,13 +52,9 @@ services:
       - ./volumes/ETL/etl.log:/sites/etl.log
       - ./volumes/ETL/:/sites/states/
 
-#  ma_web:
-#    build: .
-#    restart: always
-#    env_file:
-#      - .env
-#    container_name: ma_web
-#    depends_on:
-#      - ma_redis
-#      - ma_es01
-#      - ma_postgres
+  ma_fastapi:
+    build: src/
+    container_name: ma_fastapi
+    restart: always
+    env_file:
+      - .env

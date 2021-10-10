@@ -5,6 +5,7 @@ mkdir volumes/elasticdb
 mkdir volumes/ETL
 mkdir volumes/postgres_data
 touch volumes/ETL/etl.log
+cp requirements.txt src/
 cp .env.sample .env
 docker-compose up --build -d ma_postgres
 sleep 5
@@ -19,3 +20,7 @@ docker-compose up --build -d ma_es01
 sleep 5
 echo "ETL"
 docker-compose up --build -d ma_etl
+echo 'Start FastAPI'
+sleep 5
+docker-compose up --build -d ma_fastapi
+rm src/requirements.txt
