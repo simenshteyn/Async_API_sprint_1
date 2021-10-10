@@ -8,7 +8,7 @@ touch volumes/ETL/etl.log
 cp requirements.txt src/
 cp .env.sample .env
 docker-compose up --build -d ma_postgres
-sleep 5
+sleep 10
 echo "Начало загрузки данных в postgres"
 cp .env.sample sqlite_to_postgres/.env
 cd sqlite_to_postgres/ || exit
