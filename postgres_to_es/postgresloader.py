@@ -61,10 +61,10 @@ class PostgresLoader:
                 d = Film(
                     id              = dict(row).get('id'),
                     imdb_rating     = dict(row).get('rating'),
-                    genres          = dict(row).get('genre'),
+                    genre          = dict(row).get('genre'),
                     title           = dict(row).get('title'),
                     description     = dict(row).get('description'),
-                    directors       = dict(row).get('directors'),
+                    director       = dict(row).get('directors'),
                     actors_names    = dict(row).get('actors_names'),
                     writers_names   = dict(row).get('writers_names'),
                     actors          = dict(row).get('actors'),
@@ -88,32 +88,6 @@ class PostgresLoader:
                     id              = dict(row).get('id'),
                     name            = dict(row).get('name'),
                     description     = dict(row).get('description'),
-                )
-                self.data.append(d.dict())
-
-        return self.data
-
-    def loader_person(self) -> list:
-        """Запрос на получение всех жанров"""
-        self.cursor.execute(self.load_person())
-
-        while True:
-            rows = self.cursor.fetchmany(self.batch_size)
-            if not rows:
-                break
-
-            for row in rows:
-                print(row)
-                d = Person(
-                    id              = dict(row).get('id'),
-                    full_name       = dict(row).get('full_name'),
-                    birth_date      = dict(row).get('birth_date'),
-                    roles           = dict(row).get('roles')
-                    # {
-                    #                     'actor'    : (dict(row).get('actor')),  #.replace('{', '').replace('}', ''),
-                    #                     'writer'   : dict(row).get('writer'),  #.replace('{', '').replace('}', ''),
-                    #                     'director' : dict(row).get('director')  #.replace('{', '').replace('}', ''),
-                    #                   }
                 )
                 self.data.append(d.dict())
 
