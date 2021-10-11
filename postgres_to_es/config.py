@@ -19,6 +19,6 @@ dsl = {
 }
 
 es_conf = [{
-    'host': os.getenv('ES_HOST'),
-    'port': os.getenv('ES_PORT'),
+    'host': os.getenv('ELASTIC_HOST'),
+    'port': os.getenv('ELASTIC_PORT'),
 }]

@@ -1,9 +1,10 @@
-from datetime import datetime
+import re
+
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
-from .state import JsonFileStorage, State
-from .db_query import load_person_id, load_film_id, full_load, query_all_genre
-from src.models.models import Film, Genre
+from state import JsonFileStorage, State
+from db_query import load_person_q, load_film_id, full_load, query_all_genre, load_person_role
+from schemas import Film, Genre, Person
 
 
 class PostgresLoader:
@@ -18,27 +19,34 @@ class PostgresLoader:
 
     def load_person_id(self) -> str:
         """Вложенный запрос на получение id персон, думаю функция тут лишняя """
-        return load_person_id
+        return load_person_q
 
     def load_film_work_id(self) -> str:
         """Вложенный запрос на получение id film_work"""
         query = load_film_id % self.load_person_id()
         if self.state_key is None:
             return query
-
         inx = query.rfind(
             f'WHERE pfw.person_id IN ({self.load_person_id()})'
         )
         return f"{query[:inx]} AND updated_at > '{self.state_key}' {query[inx:]}"
 
-    def load_all_film_work_person(self):
+    def load_all_film_work_person(self) -> str:
         return full_load % self.load_film_work_id()
 
     def load_genre(self) -> str:
         if self.state_key is None:
             return query_all_genre
-        inx = query_all_genre.rfind('FROM content.genre')
+        inx = re.search('FROM content.genre', query_all_genre).end()
         return f"{query_all_genre[:inx]} WHERE updated_at > '{self.state_key}' {query_all_genre[inx:]}"
+
+    def load_person(self) -> str:
+        inx = load_person_q.find('id')
+        query = load_person_role
+        # if self.state_key is None:
+        return query
+        # inx = re.search('FROM content.person', query).end()
+        # return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
         """Запрос на получение всех данных по фильмам"""
@@ -53,15 +61,14 @@ class PostgresLoader:
                 d = Film(
                     id              = dict(row).get('id'),
                     imdb_rating     = dict(row).get('rating'),
+                    genre          = dict(row).get('genre'),
                     title           = dict(row).get('title'),
                     description     = dict(row).get('description'),
+                    director       = dict(row).get('directors'),
                     actors_names    = dict(row).get('actors_names'),
                     writers_names   = dict(row).get('writers_names'),
-                    directors_names = dict(row).get('directors_names'),
-                    genres_names    = dict(row).get('genre'),
                     actors          = dict(row).get('actors'),
                     writers         = dict(row).get('writers'),
-                    directors       = dict(row).get('directors'),
                 )
                 self.data.append(d.dict())
 

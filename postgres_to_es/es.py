@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 
 from elasticsearch import Elasticsearch
-from .utils import backoff
+from utils import backoff
 
 
 logger = logging.getLogger('ESLoader')
@@ -23,7 +23,7 @@ class EsSaver:
             logger.warning(f'{datetime.now()}\n\nindex movies already exist:')
 
         self.client.index(index=name_index, body=f)
-        
+
     @backoff()
     def load_data(self, name_index) -> None:
         self.client.bulk(body='\n'.join(self.movies_list) + '\n', index=name_index, refresh=True)
@@ -48,6 +48,5 @@ class EsSaver:
                 if len(self.movies_list) == 50:
                     self.load_data(name_index)
                     self.movies_list.clear()
-                print(row)
             self.load_data(name_index)
             break

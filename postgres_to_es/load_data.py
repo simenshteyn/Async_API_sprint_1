@@ -7,8 +7,8 @@ from contextlib import closing
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
-from src.config import dsl, es_conf
-from pq_loader_film_work import PostgresLoader
+from config import dsl, es_conf
+from postgresloader import PostgresLoader
 from utils import backoff
 from es import EsSaver
 from state import State, JsonFileStorage
@@ -41,4 +41,3 @@ if __name__ == '__main__':
     save_elastic(schemas='schemas_es/schemas_genre.json', name_index='genre')
 
     State(JsonFileStorage('PostgresDataState.txt')).set_state(str('my_key'), value=str(datetime.now()))
-

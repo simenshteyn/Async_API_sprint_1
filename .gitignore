@@ -49,6 +49,8 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+volumes/
+
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -90,3 +92,5 @@ local_settings.py
 
 .env
 db.sqlite3
+
+PostgresData.txt
