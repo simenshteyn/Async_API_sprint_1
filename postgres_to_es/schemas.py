@@ -23,15 +23,11 @@ class Film(BaseModel):
     genre           : Optional[List[str]] = None
     title           : str
     description     : Optional[str] = None
-    director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
+    director        : Optional[List[str]] = None
     actors_names    : Optional[List[str]] = None
     writers_names   : Optional[List[str]] = None
     actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
     writers         : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
 
 
 class Genre(BaseModel):
@@ -39,17 +35,9 @@ class Genre(BaseModel):
     name            : str
     description     : Optional[str] = None
 
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
-
 
 class Person(BaseModel):
     id              : Union[int, str, UUID]
     full_name       : str
     birth_date      : Optional[date] = None
     roles           : List[str]
-
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps

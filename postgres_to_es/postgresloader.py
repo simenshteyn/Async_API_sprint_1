@@ -61,10 +61,10 @@ class PostgresLoader:
                 d = Film(
                     id              = dict(row).get('id'),
                     imdb_rating     = dict(row).get('rating'),
-                    genre          = dict(row).get('genre'),
+                    genre           = dict(row).get('genre'),
                     title           = dict(row).get('title'),
                     description     = dict(row).get('description'),
-                    director       = dict(row).get('directors'),
+                    director        = dict(row).get('director'),
                     actors_names    = dict(row).get('actors_names'),
                     writers_names   = dict(row).get('writers_names'),
                     actors          = dict(row).get('actors'),
