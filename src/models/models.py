@@ -1,8 +1,7 @@
-from uuid import UUID
-from datetime import date
-
 import orjson
 
+from uuid import UUID
+from datetime import date
 
 from typing import Union, Optional, List, Dict
 from pydantic import BaseModel
