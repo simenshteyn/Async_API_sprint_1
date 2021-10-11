@@ -1,5 +1,3 @@
-import orjson
-
 from uuid import UUID
 from datetime import date
 
