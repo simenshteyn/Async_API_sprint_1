@@ -1,3 +1,4 @@
+
 #!/bin/bash
 echo "Создание структуры папок для запуска ETL/ES. Запуск elastic"
 mkdir volumes
