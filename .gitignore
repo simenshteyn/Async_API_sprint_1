@@ -93,7 +93,6 @@ local_settings.py
 
 .env
 db.sqlite3
-
 PostgresData.txt
 volumes/
 sqlite_to_postgres/.env
