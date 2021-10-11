@@ -7,8 +7,8 @@ from contextlib import closing
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
-from src.config import dsl, es_conf
-from pq_loader_film_work import PostgresLoader
+from config import dsl, es_conf
+from postgresloader import PostgresLoader
 from utils import backoff
 from es import EsSaver
 from state import State, JsonFileStorage
