@@ -23,7 +23,7 @@ class Film(BaseModel):
     genre           : Optional[List[str]] = None
     title           : str
     description     : Optional[str] = None
-    director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
+    director        : Optional[List[str]] = None
     actors_names    : Optional[List[str]] = None
     writers_names   : Optional[List[str]] = None
     actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
