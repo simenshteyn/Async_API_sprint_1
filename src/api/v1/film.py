@@ -32,7 +32,7 @@ class FilmShort(BaseModel):
     imdb_rating: Optional[float] = None
 
 
-@router.get('/', response_model=List[Film])
+@router.get('/', response_model=List[Film], response_model_exclude_unset=True)
 async def films_sorted(sort: Optional[str] = None,
                        film_service: FilmService = Depends(get_film_service)):
     if sort and sort == "-imdb_rating":
@@ -65,7 +65,8 @@ async def films_sorted(sort: Optional[str] = None,
                         detail='sorting not found')
 
 
-@router.get('/search/{film_search_string}', response_model=List[FilmShort])
+@router.get('/search/{film_search_string}', response_model=List[FilmShort],
+            response_model_exclude_unset=True)
 async def films_search(film_search_string: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> List[FilmShort]:

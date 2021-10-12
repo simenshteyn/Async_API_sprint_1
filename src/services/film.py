@@ -38,15 +38,18 @@ class FilmService:
             await self._put_film_search_to_cache(search_string, film_list)
         return film_list
 
-    async def get_sorted_by_field(self, sort_field: str,
-                                  sort_type: str = "desc"
+    async def get_sorted_by_field(self, sort_field: str, sort_type: str
                                   ) -> Optional[List[Film]]:
-        film_list = await self._sorted_film_search_from_elastic(sort_field,
-                                                                sort_type)
+        film_list = await self._sorted_film_search_from_cache(sort_field,
+                                                              sort_type)
         if not film_list:
-            return None
+            film_list = await self._sorted_film_search_from_elastic(sort_field,
+                                                                    sort_type)
+            if not film_list:
+                return None
+            await self._put_sorted_film_search_to_cache(sort_field, sort_type,
+                                                        film_list)
         return film_list
-
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         doc = await self.elastic.get('movies', film_id)
@@ -94,8 +97,15 @@ class FilmService:
         data = await self.redis.get(search_string)
         if not data:
             return None
-        film_list = parse_raw_as(List[Film], data)
-        return film_list
+        return parse_raw_as(List[Film], data)
+
+    async def _sorted_film_search_from_cache(self, sort_field: str,
+                                             sort_type: str
+                                             ) -> Optional[List[Film]]:
+        data = await self.redis.get(sort_field+sort_type)
+        if not data:
+            return None
+        return parse_raw_as(List[Film], data)
 
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(film.id, film.json(),
@@ -106,6 +116,14 @@ class FilmService:
                                         film_list: List[Film]):
         film_list_json = json.dumps(film_list, default=pydantic_encoder)
         await self.redis.set(search_string, film_list_json)
+
+    async def _put_sorted_film_search_to_cache(self,
+                                               sort_field: str,
+                                               sort_type: str,
+                                               film_list: List[Film]):
+        film_list_json = json.dumps(film_list, default=pydantic_encoder)
+        await self.redis.set(sort_field+sort_type, film_list_json)
+
 
 
 @lru_cache()
