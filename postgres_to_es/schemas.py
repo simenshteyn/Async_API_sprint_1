@@ -7,8 +7,8 @@ from typing import Union, Optional, List, Dict
 from pydantic import BaseModel
 
 
-OBJ_ID   = Union[str, str, UUID]
-OBJ_NAME = Union[str, str, UUID]
+OBJ_ID   = Union[str, UUID]
+OBJ_NAME = Union[str, str]
 
 
 def orjson_dumps(v, *, default):
@@ -24,15 +24,15 @@ class Orjson(BaseModel):
 
 class Film(Orjson):
     id              : Union[int, str, UUID]
-    imdb_rating     : Optional[float] = None
-    genre           : Optional[List[str]] = None
+    imdb_rating     : float = None
+    genre           : List[Dict[OBJ_NAME, OBJ_ID]] = None
     title           : str
-    description     : Optional[str] = None
-    director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    actors_names    : Optional[List[str]] = None
-    writers_names   : Optional[List[str]] = None
-    actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    writers         : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
+    description     : str = None
+    director        : List[Dict[OBJ_ID, OBJ_NAME]] = None
+    actors_names    : List[str] = None
+    writers_names   : List[str] = None
+    actors          : List[Dict[OBJ_ID, OBJ_NAME]] = None
+    writers         : List[Dict[OBJ_ID, OBJ_NAME]] = None
 
 
 class Genre(Orjson):
@@ -44,6 +44,6 @@ class Genre(Orjson):
 class Person(Orjson):
     id              : Union[int, str, UUID]
     full_name       : str
-    birth_date      : Optional[date] = None
+    birth_date      : date = None
     role            : str = None
     film_ids        : list[Union[int, str, UUID]]
