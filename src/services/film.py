@@ -38,17 +38,31 @@ class FilmService:
             await self._put_film_search_to_cache(search_string, film_list)
         return film_list
 
-    async def get_sorted_by_field(self, sort_field: str, sort_type: str
+    async def get_sorted_by_field(self, sort_field: str, sort_type: str,
+                                  page_number: int, page_size: int
                                   ) -> Optional[List[Film]]:
-        film_list = await self._sorted_film_search_from_cache(sort_field,
-                                                              sort_type)
+        film_list = await self._sorted_film_search_from_cache(
+            sort_field=sort_field,
+            sort_type=sort_type,
+            page_number=page_number,
+            page_size=page_size
+        )
         if not film_list:
-            film_list = await self._sorted_film_search_from_elastic(sort_field,
-                                                                    sort_type)
+            film_list = await self._sorted_film_search_from_elastic(
+                sort_field=sort_field,
+                sort_type=sort_type,
+                page_number=page_number,
+                page_size=page_size
+            )
             if not film_list:
                 return None
-            await self._put_sorted_film_search_to_cache(sort_field, sort_type,
-                                                        film_list)
+            await self._put_sorted_film_search_to_cache(
+                sort_field=sort_field,
+                sort_type=sort_type,
+                page_number=page_number,
+                page_size=page_size,
+                film_list=film_list
+            )
         return film_list
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
@@ -74,11 +88,15 @@ class FilmService:
 
     async def _sorted_film_search_from_elastic(self,
                                                sort_field: str,
-                                               sort_type: str = "desc"
+                                               sort_type: str,
+                                               page_number: int,
+                                               page_size: int
                                                ) -> Optional[List[Film]]:
         docs = await self.elastic.search(
             index='movies',
-            body={"sort": {sort_field: sort_type}}
+            body={"sort": {sort_field: sort_type},
+                  "from": page_number * page_size,
+                  "size": page_size}
         )
         result = []
         for movie in docs['hits']['hits']:
@@ -100,9 +118,12 @@ class FilmService:
         return parse_raw_as(List[Film], data)
 
     async def _sorted_film_search_from_cache(self, sort_field: str,
-                                             sort_type: str
+                                             sort_type: str,
+                                             page_number: int,
+                                             page_size: int
                                              ) -> Optional[List[Film]]:
-        data = await self.redis.get(sort_field+sort_type)
+        data = await self.redis.get(
+            f'{sort_field}:{sort_type}:{page_number}:{page_size}')
         if not data:
             return None
         return parse_raw_as(List[Film], data)
@@ -120,10 +141,13 @@ class FilmService:
     async def _put_sorted_film_search_to_cache(self,
                                                sort_field: str,
                                                sort_type: str,
+                                               page_number: int,
+                                               page_size: int,
                                                film_list: List[Film]):
         film_list_json = json.dumps(film_list, default=pydantic_encoder)
-        await self.redis.set(sort_field+sort_type, film_list_json)
-
+        await self.redis.set(
+            f'{sort_field}:{sort_type}:{page_number}:{page_size}',
+            film_list_json)
 
 
 @lru_cache()
