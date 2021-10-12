@@ -33,9 +33,36 @@ class FilmShort(BaseModel):
 
 
 @router.get('/', response_model=List[Film])
-async def films_sorted():
-    return [Film(id='12345', title='Test_film', imdb_rating=7.5),
-            Film(id='12345', title='Second_film', imdb_rating=6.5)]
+async def films_sorted(sort: Optional[str] = None,
+                       film_service: FilmService = Depends(get_film_service)):
+    if sort and sort == "-imdb_rating":
+        film_list = await film_service.get_sorted_by_field('imdb_rating',
+                                                           'desc')
+        if not film_list:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                                detail='film not found')
+        result = []
+        for film in film_list:
+            result.append(FilmShort(id=film.id,
+                                    title=film.title,
+                                    imdb_rating=film.imdb_rating, ))
+        return result
+
+    if sort and sort == "imdb_rating":
+        film_list = await film_service.get_sorted_by_field('imdb_rating',
+                                                           'asc')
+        if not film_list:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                                detail='film not found')
+        result = []
+        for film in film_list:
+            result.append(FilmShort(id=film.id,
+                                    title=film.title,
+                                    imdb_rating=film.imdb_rating, ))
+        return result
+
+    raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                        detail='sorting not found')
 
 
 @router.get('/search/{film_search_string}', response_model=List[FilmShort])

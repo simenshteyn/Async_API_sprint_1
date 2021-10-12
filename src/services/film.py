@@ -38,6 +38,15 @@ class FilmService:
             await self._put_film_search_to_cache(search_string, film_list)
         return film_list
 
+    async def get_sorted_by_field(self, sort_field: str,
+                                  sort_type: str = "desc"
+                                  ) -> Optional[List[Film]]:
+        film_list = await self._sorted_film_search_from_elastic(sort_field,
+                                                                sort_type)
+        if not film_list:
+            return None
+        return film_list
+
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
         doc = await self.elastic.get('movies', film_id)
@@ -57,6 +66,19 @@ class FilmService:
             }})
         result = []
         for movie in doc['hits']['hits']:
+            result.append(Film(**movie['_source']))
+        return result
+
+    async def _sorted_film_search_from_elastic(self,
+                                               sort_field: str,
+                                               sort_type: str = "desc"
+                                               ) -> Optional[List[Film]]:
+        docs = await self.elastic.search(
+            index='movies',
+            body={"sort": {sort_field: sort_type}}
+        )
+        result = []
+        for movie in docs['hits']['hits']:
             result.append(Film(**movie['_source']))
         return result
 
