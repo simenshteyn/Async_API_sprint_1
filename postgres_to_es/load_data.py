@@ -39,6 +39,6 @@ if __name__ == '__main__':
 
     save_elastic(schemas='schemas_es/schemas_film.json', name_index='movies')
     save_elastic(schemas='schemas_es/schemas_genre.json', name_index='genre')
-
+    save_elastic(schemas='schemas_es/schemas_person.json', name_index='person')
 
     State(JsonFileStorage('PostgresDataState.txt')).set_state(str('my_key'), value=str(datetime.now()))
