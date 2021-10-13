@@ -100,7 +100,6 @@ class FilmService:
         )
         result = []
         for movie in docs['hits']['hits']:
-            print(movie)
             result.append(Film(**movie['_source']))
         return result
 
