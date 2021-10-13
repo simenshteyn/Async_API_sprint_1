@@ -28,7 +28,7 @@ class Film(Orjson):
     genre           : Optional[List[str]] = None
     title           : str
     description     : Optional[str] = None
-    director        : Optional[List[str]] = None
+    director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
     actors_names    : Optional[List[str]] = None
     writers_names   : Optional[List[str]] = None
     actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
@@ -45,5 +45,5 @@ class Person(Orjson):
     id              : Union[int, str, UUID]
     full_name       : str
     birth_date      : Optional[date] = None
-    role            : str = None
-    film_ids        : list[Union[int, str, UUID]]
+    role            : Optional[str] = None
+    film_ids        : Optional[List[Union[int, str, UUID]]]
