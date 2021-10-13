@@ -71,6 +71,8 @@ async def films_sorted(sort: Optional[str] = None,
                             detail='sorting not found')
 
 
+
+
 @router.get('/search/{film_search_string}', response_model=List[FilmShort],
             response_model_exclude_unset=True)
 async def films_search(film_search_string: str,

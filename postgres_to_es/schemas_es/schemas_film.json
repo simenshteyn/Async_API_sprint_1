@@ -49,17 +49,7 @@
         "type": "float"
       },
       "genre": {
-        "type": "nested",
-        "dynamic": "strict",
-        "properties": {
-          "name": {
-            "type": "text",
-            "analyzer": "ru_en"
-          },
-          "id": {
-            "type": "keyword"
-          }
-        }
+        "type": "keyword"
       },
       "title": {
         "type": "text",
@@ -75,17 +65,8 @@
         "analyzer": "ru_en"
       },
       "director": {
-        "type": "nested",
-        "dynamic": "strict",
-        "properties": {
-          "id": {
-            "type": "keyword"
-          },
-          "name": {
-            "type": "text",
-            "analyzer": "ru_en"
-          }
-        }
+        "type": "text",
+        "analyzer": "ru_en"
       },
       "actors_names": {
         "type": "text",
