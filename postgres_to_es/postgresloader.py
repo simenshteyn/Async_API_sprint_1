@@ -1,5 +1,4 @@
 import re
-import time
 
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
@@ -44,10 +43,10 @@ class PostgresLoader:
     def load_person(self) -> str:
         inx = load_person_q.find('id')
         query = load_person_role
-        if self.state_key is None:
-            return query
-        inx = re.search('ON p.id = pfw.person_id', query).end()
-        return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
+        # if self.state_key is None:
+        return query
+        # inx = re.search('FROM content.person', query).end()
+        # return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
         """Запрос на получение всех данных по фильмам"""
@@ -92,24 +91,4 @@ class PostgresLoader:
                 )
                 self.data.append(d.dict())
 
-        return self.data
-
-    def loader_person(self) -> list:
-        """Запрос на получение всех персон"""
-        self.cursor.execute(self.load_person())
-
-        while True:
-            rows = self.cursor.fetchmany(self.batch_size)
-            if not rows:
-                break
-
-            for row in rows:
-                d = Person(
-                    id              = dict(row).get('id'),
-                    full_name       = dict(row).get('full_name'),
-                    birth_date      = dict(row).get('birth_date'),
-                    role            = dict(row).get('role').replace('{', '').replace('}', ''),
-                    film_ids        = [dict(row).get('film_ids').replace('{', '').replace('}', '')]
-                )
-                self.data.append(d.dict())
         return self.data
