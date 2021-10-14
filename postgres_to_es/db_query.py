@@ -3,13 +3,13 @@ load_person_q = f'''SELECT DISTINCT id
                     GROUP BY id
                     '''
 
-load_person_role = f'''SELECT DISTINCT p.id, p.full_name, p.birth_date,
-                    ARRAY_AGG(jsonb_build_object(pfw.role, pfw.film_work_id)) AS roles
+load_person_role = f'''SELECT p.id, p.full_name, p.birth_date,
+                    ARRAY_AGG(DISTINCT pfw.role) AS role,
+                    ARRAY_AGG(DISTINCT pfw.film_work_id) AS film_ids
                     FROM content.person as p
                     LEFT JOIN content.person_film_work as pfw ON p.id = pfw.person_id
                     GROUP BY p.id
                     '''
-
 
 load_film_id = f'''SELECT DISTINCT fw.id
                     FROM content.film_work as fw
@@ -18,8 +18,8 @@ load_film_id = f'''SELECT DISTINCT fw.id
                     GROUP BY fw.id
                     '''
 
-big_request = """ARRAY_AGG(DISTINCT g.name) AS genre,
-ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'director') AS director,
+big_request = """ARRAY_AGG(DISTINCT jsonb_build_object('id', g.id, 'name', g.name)) AS genre,
+ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'director') AS director,
 ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'actor') AS actors,
 ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'writer') AS writers,
 ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'actor') AS actors_names,
