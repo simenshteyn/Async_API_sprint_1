@@ -3,6 +3,7 @@ load_person_q = f'''SELECT DISTINCT id
                     GROUP BY id
                     '''
 
+
 load_person_role = f'''SELECT p.id, p.full_name, p.birth_date,
                     ARRAY_AGG(DISTINCT pfw.role) AS role,
                     ARRAY_AGG(DISTINCT pfw.film_work_id) AS film_ids

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 from services.film import FilmService, get_film_service
 
-
 router = APIRouter()
 
 OBJ_ID = Union[str, str, UUID]
