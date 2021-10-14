@@ -11,7 +11,6 @@ load_person_role = f'''SELECT p.id, p.full_name, p.birth_date,
                     GROUP BY p.id
                     '''
 
-
 load_film_id = f'''SELECT DISTINCT fw.id
                     FROM content.film_work as fw
                     LEFT JOIN content.person_film_work as pfw ON pfw.film_work_id = fw.id

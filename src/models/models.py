@@ -6,7 +6,6 @@ import orjson
 from typing import Union, Optional, List, Dict
 from pydantic import BaseModel
 
-
 OBJ_ID   = Union[str, str, UUID]
 OBJ_NAME = Union[str, str, UUID]
 
