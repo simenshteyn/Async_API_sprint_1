@@ -32,4 +32,5 @@ if __name__ == '__main__':
         except:
             counter -= 1
             print(f"Не удалось записать данные, попытка № {counter}")
+            time.sleep(1)
             continue
