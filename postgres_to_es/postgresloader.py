@@ -1,5 +1,4 @@
 import re
-import time
 
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
@@ -44,10 +43,10 @@ class PostgresLoader:
     def load_person(self) -> str:
         inx = load_person_q.find('id')
         query = load_person_role
-        if self.state_key is None:
-            return query
-        inx = re.search('ON p.id = pfw.person_id', query).end()
-        return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
+        # if self.state_key is None:
+        return query
+        # inx = re.search('FROM content.person', query).end()
+        # return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
         """Запрос на получение всех данных по фильмам"""
@@ -112,4 +111,5 @@ class PostgresLoader:
                     film_ids        = [dict(row).get('film_ids').replace('{', '').replace('}', '')]
                 )
                 self.data.append(d.dict())
+
         return self.data
