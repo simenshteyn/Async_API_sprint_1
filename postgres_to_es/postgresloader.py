@@ -41,12 +41,11 @@ class PostgresLoader:
         return f"{query_all_genre[:inx]} WHERE updated_at > '{self.state_key}' {query_all_genre[inx:]}"
 
     def load_person(self) -> str:
-        inx = load_person_q.find('id')
         query = load_person_role
-        # if self.state_key is None:
-        return query
-        # inx = re.search('FROM content.person', query).end()
-        # return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
+        if self.state_key is None:
+            return query
+        inx = re.search('as pfw ON p.id = pfw.person_id', query).end()
+        return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
         """Запрос на получение всех данных по фильмам"""
