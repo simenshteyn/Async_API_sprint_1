@@ -25,7 +25,7 @@ class Orjson(BaseModel):
 class Film(Orjson):
     id              : Union[int, str, UUID]
     imdb_rating     : Optional[float] = None
-    genre           : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
+    genre           : Optional[List[str]] = None
     title           : str
     description     : Optional[str] = None
     director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
