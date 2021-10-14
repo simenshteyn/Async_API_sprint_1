@@ -92,3 +92,23 @@ class PostgresLoader:
                 self.data.append(d.dict())
 
         return self.data
+
+    def loader_person(self) -> list:
+        """Запрос на получение всех персон"""
+        self.cursor.execute(self.load_person())
+
+        while True:
+            rows = self.cursor.fetchmany(self.batch_size)
+            if not rows:
+                break
+
+            for row in rows:
+                d = Person(
+                    id              = dict(row).get('id'),
+                    full_name       = dict(row).get('full_name'),
+                    birth_date      = dict(row).get('birth_date'),
+                    role            = dict(row).get('role').replace('{', '').replace('}', ''),
+                    film_ids        = [dict(row).get('film_ids').replace('{', '').replace('}', '')]
+                )
+                self.data.append(d.dict())
+        return self.data

@@ -51,6 +51,12 @@
       },
       "birth_date": {
         "type": "date"
+      },
+      "role": {
+        "type": "keyword"
+      },
+      "film_ids": {
+        "type": "keyword"
       }
     }
   }
