@@ -3,7 +3,6 @@ load_person_q = f'''SELECT DISTINCT id
                     GROUP BY id
                     '''
 
-
 load_person_role = f'''SELECT p.id, p.full_name, p.birth_date,
                     ARRAY_AGG(DISTINCT pfw.role) AS role,
                     ARRAY_AGG(DISTINCT pfw.film_work_id) AS film_ids
@@ -19,8 +18,8 @@ load_film_id = f'''SELECT DISTINCT fw.id
                     GROUP BY fw.id
                     '''
 
-big_request = """ARRAY_AGG(DISTINCT jsonb_build_object('name', g.name, 'id', g.id)) AS genre,
-ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'director') AS director,
+big_request = """ARRAY_AGG(DISTINCT g.name) AS genre,
+ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'director') AS director,
 ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'actor') AS actors,
 ARRAY_AGG(DISTINCT jsonb_build_object('id', p.id, 'name', p.full_name)) FILTER (WHERE pfw.role = 'writer') AS writers,
 ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'actor') AS actors_names,
