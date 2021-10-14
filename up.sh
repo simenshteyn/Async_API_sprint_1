@@ -14,10 +14,9 @@ docker-compose up --build -d ma_postgres
 echo 'Start Redis'
 docker-compose up --build -d ma_redis
 docker-compose up --build -d ma_es01
-sleep 25
-echo "ETL"
+echo "Перенос данных в elastic"
+sleep 30
 docker-compose up --build -d ma_etl
 echo 'Start FastAPI'
-sleep 25
 docker-compose up --build -d ma_fastapi
 rm src/requirements.txt
