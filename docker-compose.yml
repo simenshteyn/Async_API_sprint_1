@@ -10,7 +10,7 @@ services:
     restart: always
     volumes:
       - ./volumes/postgres_data:/var/lib/postgresql/data/
-      - ./schema_design/db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
+      - ./dump.sql:/docker-entrypoint-initdb.d/dump.sql
     env_file:
       - .env
     expose:

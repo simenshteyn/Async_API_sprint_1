@@ -41,12 +41,11 @@ class PostgresLoader:
         return f"{query_all_genre[:inx]} WHERE updated_at > '{self.state_key}' {query_all_genre[inx:]}"
 
     def load_person(self) -> str:
-        inx = load_person_q.find('id')
         query = load_person_role
-        # if self.state_key is None:
-        return query
-        # inx = re.search('FROM content.person', query).end()
-        # return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
+        if self.state_key is None:
+            return query
+        inx = re.search('as pfw ON p.id = pfw.person_id', query).end()
+        return f"{query[:inx]} WHERE updated_at > '{self.state_key}' {query[inx:]}"
 
     def loader_movies(self) -> list:
         """Запрос на получение всех данных по фильмам"""
@@ -64,7 +63,7 @@ class PostgresLoader:
                     genre           = dict(row).get('genre'),
                     title           = dict(row).get('title'),
                     description     = dict(row).get('description'),
-                    director        = dict(row).get('directors'),
+                    director        = dict(row).get('director'),
                     actors_names    = dict(row).get('actors_names'),
                     writers_names   = dict(row).get('writers_names'),
                     actors          = dict(row).get('actors'),
@@ -94,7 +93,7 @@ class PostgresLoader:
         return self.data
 
     def loader_person(self) -> list:
-        """Запрос на получение всех жанров"""
+        """Запрос на получение всех персон"""
         self.cursor.execute(self.load_person())
 
         while True:
@@ -103,13 +102,12 @@ class PostgresLoader:
                 break
 
             for row in rows:
-                print(row)
                 d = Person(
                     id              = dict(row).get('id'),
                     full_name       = dict(row).get('full_name'),
                     birth_date      = dict(row).get('birth_date'),
-                    roles           = dict(row).get('roles')
+                    role            = dict(row).get('role').replace('{', '').replace('}', ''),
+                    film_ids        = [dict(row).get('film_ids').replace('{', '').replace('}', '')]
                 )
                 self.data.append(d.dict())
-
         return self.data
