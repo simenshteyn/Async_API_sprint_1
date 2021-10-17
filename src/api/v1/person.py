@@ -58,3 +58,22 @@ async def person_list(
                              role=person.role,
                              film_ids=person.film_ids))
     return result
+
+
+@router.get('/search/{person_search_string}', response_model=List[Person],
+            response_model_exclude_unset=True)
+async def films_search(person_search_string: str,
+                       person_service: PersonService = Depends(
+                           get_person_service)) -> List[Person]:
+    person_list = await person_service.get_by_search(person_search_string)
+    if not person_list:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                            detail='person not found')
+    result = []
+    for person in person_list:
+        result.append(Person(id=person.id,
+                             full_name=person.full_name,
+                             birth_date=person.birth_date,
+                             role=person.role,
+                             film_ids=person.film_ids))
+    return result

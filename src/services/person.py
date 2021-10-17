@@ -93,6 +93,45 @@ class PersonService:
         await self.redis.set(f'person_list:{page_number}:{page_size}',
                              person_list_json)
 
+    async def get_by_search(self, search_string: str) -> Optional[List[Person]]:
+        person_list = await self._person_search_from_cache(search_string)
+        if not person_list:
+            person_list = await self._search_person_from_elastic(search_string)
+            if not person_list:
+                return None
+            await self._put_person_search_to_cache(search_string, person_list)
+        return person_list
+
+    async def _person_search_from_cache(self, search_string: str) -> Optional[
+        List[Person]]:
+        data = await self.redis.get(search_string)
+        if not data:
+            return None
+        return parse_raw_as(List[Person], data)
+
+    async def _search_person_from_elastic(self, search_string: str) -> Optional[
+        List[Person]]:
+        doc = await self.elastic.search(
+            index='person',
+            body={"query": {
+                "match": {
+                    "full_name": {
+                        "query": search_string,
+                        "fuzziness": "auto"
+                    }
+                }
+            }})
+        result = []
+        for movie in doc['hits']['hits']:
+            result.append(Person(**movie['_source']))
+        return result
+
+    async def _put_person_search_to_cache(self,
+                                        search_string: str,
+                                        person_list: List[Person]):
+        person_list_json = json.dumps(person_list, default=pydantic_encoder)
+        await self.redis.set(search_string, person_list_json)
+
 
 @lru_cache()
 def get_person_service(
