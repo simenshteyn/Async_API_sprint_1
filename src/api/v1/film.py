@@ -39,7 +39,7 @@ async def films_sorted(sort: Optional[str] = None,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
     if sort == "imdb_rating":
-        film_list = await film_service.get_sorted_by_field(
+        film_list = await film_service.get_film_sorted(
             sort_field='imdb_rating',
             sort_type='asc',
             filter_genre=filter_genre,
@@ -55,7 +55,7 @@ async def films_sorted(sort: Optional[str] = None,
                                     imdb_rating=film.imdb_rating, ))
         return result
     elif sort == "-imdb_rating" or not sort:
-        film_list = await film_service.get_sorted_by_field(
+        film_list = await film_service.get_film_sorted(
             sort_field='imdb_rating',
             sort_type='desc',
             filter_genre=filter_genre,
@@ -80,7 +80,7 @@ async def films_sorted(sort: Optional[str] = None,
 async def films_search(film_search_string: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> List[FilmShort]:
-    film_list = await film_service.get_by_search(film_search_string)
+    film_list = await film_service.get_film_by_search(film_search_string)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
@@ -97,7 +97,7 @@ async def films_search(film_search_string: str,
 async def film_details(film_id: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> Film:
-    film = await film_service.get_by_id(film_id)
+    film = await film_service.get_film_by_id(film_id)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
@@ -118,7 +118,7 @@ async def film_details(film_id: str,
 async def film_alike(film_id: str,
                      film_service: FilmService = Depends(
                          get_film_service)) -> List[FilmShort]:
-    film_list = await film_service.get_alike(film_id)
+    film_list = await film_service.get_film_alike(film_id)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')

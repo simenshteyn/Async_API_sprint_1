@@ -28,7 +28,7 @@ class Person(BaseModel):
 async def person_details(person_id: str,
                          person_service: PersonService = Depends(
                              get_person_service)) -> Person:
-    person = await person_service.get_by_id(person_id)
+    person = await person_service.get_person_by_id(person_id)
     if not person:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
@@ -82,7 +82,7 @@ async def person_list(
 async def films_search(person_search_string: str,
                        person_service: PersonService = Depends(
                            get_person_service)) -> List[Person]:
-    person_list = await person_service.get_by_search(person_search_string)
+    person_list = await person_service.get_person_by_search(person_search_string)
     if not person_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
