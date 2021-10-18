@@ -201,6 +201,15 @@ class FilmService:
         film_list_json = json.dumps(film_list, default=pydantic_encoder)
         await self.redis.set(f'alike:{film_id}', film_list_json)
 
+    async def get_popular_in_genre(self, genre_id: str,) -> Optional[List[Film]]:
+        film_list = await self.get_sorted_by_field(sort_field='imdb_rating',
+                                                   sort_type='desc',
+                                                   filter_genre=genre_id,
+                                                   page_number=0,
+                                                   page_size=30)
+        return film_list
+
+
 
 @lru_cache()
 def get_film_service(
