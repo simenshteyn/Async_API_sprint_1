@@ -14,6 +14,9 @@ docker-compose up --build -d ma_postgres
 echo 'Start Redis'
 docker-compose up --build -d ma_redis
 docker-compose up --build -d ma_es01
+echo "Загрузка схем индексов в elastic"
+sleep 30
+docker-compose --profile=init up --build -d es_init
 echo "Перенос данных в elastic"
 sleep 30
 docker-compose up --build -d ma_etl

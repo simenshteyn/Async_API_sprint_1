@@ -34,6 +34,7 @@ class FilmShort(BaseModel):
 
 @router.get('/', response_model=List[Film], response_model_exclude_unset=True)
 async def films_sorted(sort: Optional[str] = None,
+                       filter_genre: Optional[str] = None,
                        page_number: int = 0,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
@@ -41,6 +42,7 @@ async def films_sorted(sort: Optional[str] = None,
         film_list = await film_service.get_sorted_by_field(
             sort_field='imdb_rating',
             sort_type='asc',
+            filter_genre=filter_genre,
             page_number=page_number,
             page_size=page_size)
         if not film_list:
@@ -56,6 +58,7 @@ async def films_sorted(sort: Optional[str] = None,
         film_list = await film_service.get_sorted_by_field(
             sort_field='imdb_rating',
             sort_type='desc',
+            filter_genre=filter_genre,
             page_number=page_number,
             page_size=page_size)
         if not film_list:

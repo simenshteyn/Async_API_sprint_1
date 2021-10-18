@@ -1,7 +1,5 @@
 version: '3.8'
 
-#volumes:
-#  postgres_data:
 
 services:
   ma_postgres:
@@ -29,6 +27,22 @@ services:
     ports:
       - "9200:9200"
 
+  es_init:
+    image: curlimages/curl:7.79.1
+    container_name: es_init
+    command: >
+      sh -c "curl -XPUT -H 'Content-Type: application/json' -d@/usr/share/schemas_film.json es01:9200/movies &&
+             curl -XPUT -H 'Content-Type: application/json' -d@/usr/share/schemas_genre.json es01:9200/genre &&
+             curl -XPUT -H 'Content-Type: application/json' -d@/usr/share/schemas_person.json es01:9200/person"
+    volumes:
+      - ./postgres_to_es/schemas_es/schemas_film.json:/home/curl_user/schemas_film.json
+      - ./postgres_to_es/schemas_es/schemas_genre.json:/home/curl_user/schemas_genre.json
+      - ./postgres_to_es/schemas_es/schemas_person.json:/home/curl_user/schemas_person.json
+    depends_on:
+      - ma_es01
+    profiles:
+      - init
+
   ma_redis:
     image: 'redis:6.2.6'
     container_name: ma_redis
@@ -36,12 +50,8 @@ services:
       - '6379:6379'
 
   ma_etl:
+    container_name: ma_etl
     build: ./postgres_to_es
-#    deploy:
-#      restart_policy:
-#        condition: any
-#        delay: 5s
-#        window: 5s
     restart: unless-stopped
     depends_on:
       - ma_postgres
