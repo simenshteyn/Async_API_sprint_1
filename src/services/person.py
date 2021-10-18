@@ -10,7 +10,7 @@ from pydantic.json import pydantic_encoder
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.models import Person
+from models.models import Person, Film
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
@@ -29,11 +29,6 @@ class PersonService:
             await self._put_person_to_cache(person)
         return person
 
-    async def _get_person_from_elastic(self, person_id: str) -> Optional[
-        Person]:
-        doc = await self.elastic.get('person', person_id)
-        return Person(**doc['_source'])
-
     async def _person_from_cache(self, person_id: str) -> Optional[Person]:
         data = await self.redis.get(person_id)
         if not data:
@@ -41,12 +36,17 @@ class PersonService:
         person = Person.parse_raw(data)
         return person
 
+    async def _get_person_from_elastic(self, person_id: str) -> Optional[
+        Person]:
+        doc = await self.elastic.get('person', person_id)
+        return Person(**doc['_source'])
+
     async def _put_person_to_cache(self, person: Person):
         await self.redis.set(person.id, person.json(),
                              expire=PERSON_CACHE_EXPIRE_IN_SECONDS)
 
     async def get_person_list(self, page_number: int, page_size: int) -> \
-    Optional[List[Person]]:
+            Optional[List[Person]]:
         person_list = await self._person_list_from_cache(
             page_number=page_number,
             page_size=page_size)
@@ -64,6 +64,15 @@ class PersonService:
             )
         return person_list
 
+    async def _person_list_from_cache(self,
+                                      page_number: int,
+                                      page_size: int) -> Optional[
+        List[Person]]:
+        data = await self.redis.get(f'person_list:{page_number}:{page_size}')
+        if not data:
+            return None
+        return parse_raw_as(List[Person], data)
+
     async def _person_list_from_elastic(self,
                                         page_number: int,
                                         page_size: int) -> Optional[
@@ -78,22 +87,14 @@ class PersonService:
             result.append(Person(**person['_source']))
         return result
 
-    async def _person_list_from_cache(self,
-                                      page_number: int,
-                                      page_size: int) -> Optional[
-        List[Person]]:
-        data = await self.redis.get(f'person_list:{page_number}:{page_size}')
-        if not data:
-            return None
-        return parse_raw_as(List[Person], data)
-
     async def _put_person_list_to_cache(self, page_number: int, page_size: int,
                                         person_list: List[Person]):
         person_list_json = json.dumps(person_list, default=pydantic_encoder)
         await self.redis.set(f'person_list:{page_number}:{page_size}',
                              person_list_json)
 
-    async def get_by_search(self, search_string: str) -> Optional[List[Person]]:
+    async def get_by_search(self, search_string: str) -> Optional[
+        List[Person]]:
         person_list = await self._person_search_from_cache(search_string)
         if not person_list:
             person_list = await self._search_person_from_elastic(search_string)
@@ -109,8 +110,9 @@ class PersonService:
             return None
         return parse_raw_as(List[Person], data)
 
-    async def _search_person_from_elastic(self, search_string: str) -> Optional[
-        List[Person]]:
+    async def _search_person_from_elastic(self, search_string: str) -> \
+            Optional[
+                List[Person]]:
         doc = await self.elastic.search(
             index='person',
             body={"query": {
@@ -127,10 +129,26 @@ class PersonService:
         return result
 
     async def _put_person_search_to_cache(self,
-                                        search_string: str,
-                                        person_list: List[Person]):
+                                          search_string: str,
+                                          person_list: List[Person]):
         person_list_json = json.dumps(person_list, default=pydantic_encoder)
         await self.redis.set(search_string, person_list_json)
+
+    async def get_person_films(self, person_id: str) -> Optional[List[Film]]:
+        # person = await self.get_by_id(person_id)
+        # if not person:
+        #     return None
+        # result = []
+        # for film in person.film_ids:
+        #
+        #
+        # if not person:
+        #     person = await self._get_person_from_elastic(person_id)
+        #     if not person:
+        #         return None
+        #     await self._put_person_to_cache(person)
+        # return person
+        pass
 
 
 @lru_cache()
