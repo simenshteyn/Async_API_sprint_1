@@ -60,7 +60,7 @@ services:
       - .env
     volumes:
       - ./volumes/ETL/etl.log:/sites/etl.log
-      - ./volumes/ETL/:/sites/
+      - ./volumes/ETL/:/sites/states/
 
   ma_fastapi:
     build: src/
