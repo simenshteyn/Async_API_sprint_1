@@ -111,3 +111,19 @@ async def film_details(film_id: str,
                 writers_names=film.writers_names,
                 actors=film.actors,
                 writers=film.writers)
+
+@router.get('/{film_id}/alike', response_model=List[FilmShort],
+            response_model_exclude_unset=True)
+async def film_alike(film_id: str,
+                     film_service: FilmService = Depends(
+                     get_film_service)) -> List[FilmShort]:
+    film_list = await film_service.get_alike(film_id)
+    if not film_list:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                            detail='film alike not found')
+    result = []
+    for film in film_list:
+        result.append(FilmShort(id=film.id,
+                                title=film.title,
+                                imdb_rating=film.imdb_rating, ))
+    return result

@@ -136,7 +136,8 @@ class FilmService:
                 "from": page_number * page_size,
                 "size": page_size}
         if filter_genre:
-            body = body | {"query": {"match": {"genre.id": {"query": filter_genre}}}}
+            body = body | {
+                "query": {"match": {"genre.id": {"query": filter_genre}}}}
         docs = await self.elastic.search(
             index='movies',
             body=body
@@ -157,6 +158,48 @@ class FilmService:
         await self.redis.set(
             f'{sort_field}:{sort_type}:{page_number}:{page_size}:{filter_genre}',
             film_list_json)
+
+    async def get_alike(self, film_id: str) -> Optional[List[Film]]:
+        film_list = await self._film_alike_from_cache(film_id)
+        if not film_list:
+            film_list = await self._get_film_alike_from_elastic(film_id)
+            if not film_list:
+                return None
+            await self._put_film_alike_to_cache(film_id, film_list)
+        return film_list
+
+    async def _film_alike_from_cache(self, film_id: str) -> Optional[
+        List[Film]]:
+        data = await self.redis.get(f'alike:{film_id}')
+        if not data:
+            return None
+        return parse_raw_as(List[Film], data)
+
+    async def _get_film_alike_from_elastic(self, film_id: str
+                                           ) -> Optional[List[Film]]:
+        film = await self.get_by_id(film_id)
+        print(f'film genre {film.genre}')
+        if not film or not film.genre:
+            print('some error?')
+            return None
+        result = []
+        for genre in film.genre:
+            print(genre)
+            alike_films = await self.get_sorted_by_field(
+                sort_field='imdb_rating',
+                sort_type='desc',
+                filter_genre=genre['id'],
+                page_number=0,
+                page_size=10)
+            if alike_films:
+                result.extend(alike_films)
+        return result
+
+    async def _put_film_alike_to_cache(self,
+                                       film_id: str,
+                                       film_list: List[Film]):
+        film_list_json = json.dumps(film_list, default=pydantic_encoder)
+        await self.redis.set(f'alike:{film_id}', film_list_json)
 
 
 @lru_cache()
