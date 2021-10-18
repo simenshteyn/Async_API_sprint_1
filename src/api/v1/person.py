@@ -1,6 +1,6 @@
 from datetime import date
 from http import HTTPStatus
-from typing import Union, Optional, List, Dict
+from typing import Union, Optional, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -50,9 +50,8 @@ async def person_films(person_id: str,
                             detail='person film list not found')
     result = []
     for film in film_list:
-        result.append(Film(id=film.id,
-                             title=film.title,
-                             imdb_rating=film.imdb_rating))
+        result.append(Film(id=film.id, title=film.title,
+                           imdb_rating=film.imdb_rating))
     return result
 
 

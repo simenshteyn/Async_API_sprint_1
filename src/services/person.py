@@ -135,20 +135,35 @@ class PersonService:
         await self.redis.set(search_string, person_list_json)
 
     async def get_person_films(self, person_id: str) -> Optional[List[Film]]:
-        # person = await self.get_by_id(person_id)
-        # if not person:
-        #     return None
-        # result = []
-        # for film in person.film_ids:
-        #
-        #
-        # if not person:
-        #     person = await self._get_person_from_elastic(person_id)
-        #     if not person:
-        #         return None
-        #     await self._put_person_to_cache(person)
-        # return person
-        pass
+        person_films = await self._person_films_from_cache(person_id)
+        if not person_films:
+            person_films = await self._person_films_from_elastic(person_id)
+            if not person_films:
+                return None
+            await self._put_person_films_to_cache(person_id, person_films)
+        return person_films
+
+    async def _person_films_from_cache(self,
+                                       person_id: str) -> Optional[List[Film]]:
+        data = await self.redis.get(f'person_films:{person_id}')
+        if not data:
+            return None
+        return parse_raw_as(List[Film], data)
+
+    async def _person_films_from_elastic(self, person_id: str) -> Optional[List[Film]]:
+        person = await self.get_by_id(person_id)
+        if not person:
+            return None
+        result = []
+        for film_id in person.film_ids:
+            doc = await self.elastic.get('movies', film_id)
+            result.append(Film(**doc['_source']))
+        return result
+
+    async def _put_person_films_to_cache(self, person_id: str,
+                                         person_films: List[Film]) -> None:
+        film_list_json = json.dumps(person_films, default=pydantic_encoder)
+        await self.redis.set(f'person_films:{person_id}', film_list_json)
 
 
 @lru_cache()
