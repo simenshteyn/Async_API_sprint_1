@@ -132,18 +132,14 @@ class FilmService:
                                                page_number: int,
                                                page_size: int
                                                ) -> Optional[List[Film]]:
+        body = {"sort": {sort_field: sort_type},
+                "from": page_number * page_size,
+                "size": page_size}
+        if filter_genre:
+            body = body | {"query": {"match": {"genre.id": {"query": filter_genre}}}}
         docs = await self.elastic.search(
             index='movies',
-            body={"sort": {sort_field: sort_type},
-                  "from": page_number * page_size,
-                  "size": page_size,
-                  "query": {
-                      "bool": {
-                          "filter": {
-                              "term": {"genre.id": filter_genre}
-                          }
-                      }}}
-
+            body=body
         )
         result = []
         for movie in docs['hits']['hits']:
@@ -153,13 +149,13 @@ class FilmService:
     async def _put_sorted_film_search_to_cache(self,
                                                sort_field: str,
                                                sort_type: str,
-                                               film_genre: str,
+                                               filter_genre: str,
                                                page_number: int,
                                                page_size: int,
                                                film_list: List[Film]):
         film_list_json = json.dumps(film_list, default=pydantic_encoder)
         await self.redis.set(
-            f'{sort_field}:{sort_type}:{page_number}:{page_size}:{film_genre}',
+            f'{sort_field}:{sort_type}:{page_number}:{page_size}:{filter_genre}',
             film_list_json)
 
 
