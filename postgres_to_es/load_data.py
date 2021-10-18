@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     def save_elastic(schemas: str, name_index: str) -> None:
         logger.info(f'{datetime.now()}\n\nElasticSearch connection is open. Start load {name_index} data')
-        EsSaver(es_conf).create_index(schemas, name_index=name_index)
+        #EsSaver(es_conf).create_index(schemas, name_index=name_index)
         EsSaver(es_conf).load(query_postgres_film(name_index), name_index=name_index)
 
     save_elastic(schemas='schemas_es/schemas_film.json', name_index='movies')

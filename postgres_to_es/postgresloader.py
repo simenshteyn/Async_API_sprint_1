@@ -107,7 +107,7 @@ class PostgresLoader:
                     full_name       = dict(row).get('full_name'),
                     birth_date      = dict(row).get('birth_date'),
                     role            = dict(row).get('role').replace('{', '').replace('}', ''),
-                    film_ids        = [dict(row).get('film_ids').replace('{', '').replace('}', '')]
+                    film_ids        = dict(row).get('film_ids').replace('{', '').replace('}', '').split(',')
                 )
                 self.data.append(d.dict())
         return self.data
