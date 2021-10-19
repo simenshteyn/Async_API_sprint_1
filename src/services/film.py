@@ -12,7 +12,7 @@ from db.elastic import get_elastic
 from db.redis import get_redis
 from models.models import Film
 
-FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
+FILM_CACHE_EXPIRE_IN_SECONDS = 10  # 60 * 5
 
 
 class FilmService:
@@ -41,31 +41,19 @@ class FilmService:
         return Film(**doc['_source'])
 
     """################### Поиск фильма ##################"""
-    async def get_film_by_search(self,
-                                 search_string: str) -> list[Film]:
+    async def get_film_by_search(self, search_string: str) -> list[Film]:
         film_list = await self._get_film_by_id_from_cache(search_string)  # заменил
         if not film_list:
-            film_list = await self._get_film_by_search_from_elastic(search_string)
+            film_list = await self._get_film_by_search_from_elastic(search_string=search_string)
             if not film_list:
                 return None
         return film_list
-
-    async def _get_film_by_search_from_elastic(
-            self,
-            search_string: str) -> list[Film]:
-        doc = await self.elastic.search(
-            index='movies',
-            q = search_string)  # убрал body
-        result = []
-        for movie in doc['hits']['hits']:
-            result.append(Film(**movie['_source']))
-        return result
 
     """################### Все фильмы ##################"""
     async def get_film_sorted(self, query: dict) -> list[Film]:
         film_list = await self._get_film_sorted_from_cache(query)
         if not film_list:
-            film_list = await self._get_film_sorted_from_elastic(query)
+            film_list = await self._get_film_by_search_from_elastic(query, query.get('filter_genre'))
             if not film_list:
                 return None
             await self._put_film_sorted_to_cache(query, film_list=film_list)  # Предлагаю заменить
@@ -80,30 +68,7 @@ class FilmService:
             return None
         return parse_raw_as(list[Film], data)
 
-    async def _get_film_sorted_from_elastic(self, query) -> list[Film]:
-        """Предлагаю сделать так
-        await self.elastic.search(
-                    size = size и тд, без body
-         """
-
-        body = {"sort": {query.get('sort_field'): query.get('sort_type')},
-                "from": query.get('page_number') * query.get('page_size'),
-                "size": query.get('page_size')}
-        if query.get('filter_genre'):
-            body = body | {
-                "query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
-        docs = await self.elastic.search(
-            index='movies',
-            body=body
-        )  # Вообще не понятная хрень))
-        result = []
-        for movie in docs['hits']['hits']:
-            result.append(Film(**movie['_source']))
-        return result
-
-    async def _put_film_sorted_to_cache(self,
-                                        query,
-                                        film_list: list[Film]):
+    async def _put_film_sorted_to_cache(self, query, film_list: list[Film]):
         film_list_json = json.dumps(film_list, default=pydantic_encoder)
         await self.redis.set(
             f'{query.get("sort_field")}:{query.get("sort_type")}:'
@@ -143,7 +108,7 @@ class FilmService:
                 result.extend(alike_films)
         return result
 
-    async def get_popular_in_genre(self, genre_id: str, ) -> list[Film]:
+    async def get_popular_in_genre(self, genre_id: str,) -> list[Film]:
         query = {
             'sort_field': 'imdb_rating',
             'sort_type': 'desc',
@@ -153,6 +118,27 @@ class FilmService:
         }
         film_list = await self.get_film_sorted(query)  # тут тоже как по мне хрень
         return film_list
+
+    """############## Вынес сюда search ############
+    ### переделать, найти как избавиться от if####"""
+    async def _get_film_by_search_from_elastic(self, query: dict = None, search_string: str = None) -> list[Film]:
+        if search_string:
+            doc = await self.elastic.search(index='movies',
+                                            q = search_string,
+                                            size = query.get('page_size') if query else None,
+                                            from_ = query.get('page_number') * query.get('page_size') if query else None,
+                                            sort = f'{query.get("sort_field")}:{query.get("sort_type")}' if query else None,
+                                            )
+        else:
+            doc = await self.elastic.search(index='movies',
+                                            size = query.get('page_size'),
+                                            from_ = query.get('page_number') * query.get('page_size'),
+                                            sort = f'{query.get("sort_field")}:{query.get("sort_type")}',
+                                            )
+        result = []
+        for movie in doc['hits']['hits']:
+            result.append(Film(**movie['_source']))
+        return result
 
 
 @lru_cache()
