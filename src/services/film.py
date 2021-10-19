@@ -29,8 +29,8 @@ class FilmService:
                 return None
         return film
 
-    async def _get_film_by_id_from_cache(self, film_id: str) -> Film:
-        data = await self.redis.get(film_id)
+    async def _get_film_by_id_from_cache(self, film: str) -> Film:  # переименовал переменную
+        data = await self.redis.get(film)
         if not data:
             return None
         film = Film.parse_raw(data)
@@ -43,43 +43,23 @@ class FilmService:
     """################### Поиск фильма ##################"""
     async def get_film_by_search(self,
                                  search_string: str) -> list[Film]:
-        film_list = await self._get_film_by_search_from_cache(search_string)
+        film_list = await self._get_film_by_id_from_cache(search_string)  # заменил
         if not film_list:
             film_list = await self._get_film_by_search_from_elastic(search_string)
             if not film_list:
                 return None
-            # await self._put_film_by_search_to_cache(search_string, film_list)
         return film_list
-
-    async def _get_film_by_search_from_cache(self, search_string: str) -> list[Film]:
-        data = await self.redis.get(search_string)
-        if not data:
-            return None
-        return parse_raw_as(list[Film], data)
 
     async def _get_film_by_search_from_elastic(
             self,
             search_string: str) -> list[Film]:
         doc = await self.elastic.search(
             index='movies',
-            body={"query": {
-                "match": {
-                    "title": {
-                        "query": search_string,
-                        "fuzziness": "auto"
-                    }
-                }
-            }})
+            q = search_string)  # убрал body
         result = []
         for movie in doc['hits']['hits']:
             result.append(Film(**movie['_source']))
         return result
-
-    # async def _put_film_by_search_to_cache(self,
-    #                                        search_string: str,
-    #                                        film_list: list[Film]):
-    #     film_list_json = json.dumps(film_list, default=pydantic_encoder)
-    #     await self.redis.set(search_string, film_list_json)
 
     """################### Все фильмы ##################"""
     async def get_film_sorted(self, query: dict) -> list[Film]:
@@ -115,7 +95,7 @@ class FilmService:
         docs = await self.elastic.search(
             index='movies',
             body=body
-        )
+        )  # Вообще не понятная хрень))
         result = []
         for movie in docs['hits']['hits']:
             result.append(Film(**movie['_source']))
@@ -137,7 +117,6 @@ class FilmService:
             film_list = await self._get_film_alike_from_elastic(film_id)
             if not film_list:
                 return None
-            # await self._put_film_alike_to_cache(film_id, film_list)
         return film_list
 
     async def _get_film_alike_from_cache(self, film_id: str) -> list[Film]:
@@ -163,12 +142,6 @@ class FilmService:
             if alike_films:
                 result.extend(alike_films)
         return result
-
-    # async def _put_film_alike_to_cache(self,
-    #                                    film_id: str,
-    #                                    film_list: list[Film]):
-    #     film_list_json = json.dumps(film_list, default=pydantic_encoder)
-    #     await self.redis.set(f'alike:{film_id}', film_list_json)
 
     async def get_popular_in_genre(self, genre_id: str, ) -> list[Film]:
         query = {
