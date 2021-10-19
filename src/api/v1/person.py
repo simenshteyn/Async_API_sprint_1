@@ -1,12 +1,11 @@
 from datetime import date
 from http import HTTPStatus
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.v1.film import Film
 from services.person import PersonService, get_person_service
 
 router = APIRouter()
@@ -37,22 +36,6 @@ async def person_details(person_id: str,
                   birth_date=person.birth_date,
                   role=person.role,
                   film_ids=person.film_ids)
-
-
-@router.get('/{person_id}/film', response_model=List[Film],
-            response_model_exclude_unset=True)
-async def person_films(person_id: str,
-                       person_service: PersonService = Depends(
-                           get_person_service)) -> List[Film]:
-    film_list = await person_service.get_person_films(person_id)
-    if not film_list:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail='person film list not found')
-    result = []
-    for film in film_list:
-        result.append(Film(id=film.id, title=film.title,
-                           imdb_rating=film.imdb_rating))
-    return result
 
 
 @router.get('/', response_model=List[Person],
