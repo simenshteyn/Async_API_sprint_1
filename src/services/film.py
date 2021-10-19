@@ -27,7 +27,6 @@ class FilmService:
             film = await self._get_film_by_id_from_elastic(film_id)
             if not film:
                 return None
-#            await self._put_film_by_id_to_cache(film)  # Предлагаю удалить у всех кроме all films
         return film
 
     async def _get_film_by_id_from_cache(self, film_id: str) -> Film:
@@ -37,14 +36,9 @@ class FilmService:
         film = Film.parse_raw(data)
         return film
 
-    async def _get_film_by_id_from_elastic(self,
-                                           film_id: str) -> Film:
+    async def _get_film_by_id_from_elastic(self, film_id: str) -> Film:
         doc = await self.elastic.get('movies', film_id)
         return Film(**doc['_source'])
-
-    # async def _put_film_by_id_to_cache(self, film: Film):
-    #     await self.redis.set(film.id, film.json(),
-    #                          expire=FILM_CACHE_EXPIRE_IN_SECONDS)
 
     """################### Поиск фильма ##################"""
     async def get_film_by_search(self,
@@ -94,25 +88,30 @@ class FilmService:
             film_list = await self._get_film_sorted_from_elastic(query)
             if not film_list:
                 return None
-            await self._put_film_sorted_to_cache(query, film_list=film_list
-            )
+            await self._put_film_sorted_to_cache(query, film_list=film_list)  # Предлагаю заменить
         return film_list
 
     async def _get_film_sorted_from_cache(self, query: dict) -> list[Film]:
         data = await self.redis.get(
-            f'{query.sort_field}:{query.sort_type}:{query.page_number}:{query.page_size}:{query.filter_genre}'
-        )
+            f'{query.get("sort_field")}:{query.get("sort_type")}'
+            f':{query.get("page_number")}:{query.get("page_size")}:{query.get("filter_genre")}'
+        )  # страшная запись
         if not data:
             return None
         return parse_raw_as(list[Film], data)
 
     async def _get_film_sorted_from_elastic(self, query) -> list[Film]:
-        body = {"sort": {query.sort_field: query.sort_type},
-                "from": query.page_number * query.page_size,
-                "size": query.page_size}
-        if query.filter_genre:
+        """Предлагаю сделать так
+        await self.elastic.search(
+                    size = size и тд, без body
+         """
+
+        body = {"sort": {query.get('sort_field'): query.get('sort_type')},
+                "from": query.get('page_number') * query.get('page_size'),
+                "size": query.get('page_size')}
+        if query.get('filter_genre'):
             body = body | {
-                "query": {"match": {"genre.id": {"query": query.filter_genre}}}}
+                "query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
         docs = await self.elastic.search(
             index='movies',
             body=body
@@ -122,17 +121,14 @@ class FilmService:
             result.append(Film(**movie['_source']))
         return result
 
-    # async def _put_film_sorted_to_cache(self,
-    #                                     sort_field: str,
-    #                                     sort_type: str,
-    #                                     filter_genre: str,
-    #                                     page_number: int,
-    #                                     page_size: int,
-    #                                     film_list: list[Film]):
-    #     film_list_json = json.dumps(film_list, default=pydantic_encoder)
-    #     await self.redis.set(
-    #         f'{sort_field}:{sort_type}:{page_number}:{page_size}:{filter_genre}',
-    #         film_list_json)
+    async def _put_film_sorted_to_cache(self,
+                                        query,
+                                        film_list: list[Film]):
+        film_list_json = json.dumps(film_list, default=pydantic_encoder)
+        await self.redis.set(
+            f'{query.get("sort_field")}:{query.get("sort_type")}:'
+            f'{query.get("page_number")}:{query.get("page_size")}:{query.get("filter_genre")}',
+            film_list_json)  # просто ужас))
 
     """################### Похожий фильм ##################"""
     async def get_film_alike(self, film_id: str) -> list[Film]:
