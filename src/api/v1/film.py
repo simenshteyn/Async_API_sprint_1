@@ -9,46 +9,27 @@ router = APIRouter()
 
 
 @router.get('/', response_model=list[Film], response_model_exclude_unset=True)
-async def films_sorted(sort: str = None,
+async def films_sorted(sort: str = 'imdb_rating',
                        filter_genre: str = None,
                        page_number: int = 0,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
-    if sort == "imdb_rating":
-        film_list = await film_service.get_film_sorted(
-            sort_field='imdb_rating',
-            sort_type='asc',
-            filter_genre=filter_genre,
-            page_number=page_number,
-            page_size=page_size)
-        if not film_list:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                                detail='film not found')
-        result = []
-        for film in film_list:
-            result.append(FilmShort(id=film.id,
-                                    title=film.title,
-                                    imdb_rating=film.imdb_rating, ))
-        return result
-    elif sort == "-imdb_rating" or not sort:
-        film_list = await film_service.get_film_sorted(
-            sort_field='imdb_rating',
-            sort_type='desc',
-            filter_genre=filter_genre,
-            page_number=page_number,
-            page_size=page_size)
-        if not film_list:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                                detail='film not found')
-        result = []
-        for film in film_list:
-            result.append(FilmShort(id=film.id,
-                                    title=film.title,
-                                    imdb_rating=film.imdb_rating, ))
-        return result
-    else:
+
+    film_list = await film_service.get_film_sorted(
+        sort_field='imdb_rating',  # только по определенному полю что дано в задании, без проверки
+        sort_type='asc' if sort == 'imdb_rating' else 'desc',
+        filter_genre=filter_genre,
+        page_number=page_number,
+        page_size=page_size)
+    if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail='sorting not found')
+                            detail='film not found')
+    result = []
+    for film in film_list:
+        result.append(FilmShort(id=film.id,
+                                title=film.title,
+                                imdb_rating=film.imdb_rating, ))
+    return result
 
 
 @router.get('/search/{film_search_string}', response_model=list[FilmShort],

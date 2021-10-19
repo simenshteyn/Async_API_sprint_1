@@ -29,6 +29,12 @@ class Film(Orjson):
     writers: list[dict[str, str]] = None
 
 
+class FilmShort(BaseModel):
+    id: str
+    title: str
+    imdb_rating: float = None
+
+
 class Genre(Orjson):
     id: str
     name: str
@@ -41,9 +47,3 @@ class Person(Orjson):
     birth_date: date = None
     role: str = None
     film_ids: list[str]
-
-
-class FilmShort(BaseModel):
-    id: str
-    title: str
-    imdb_rating: float = None
