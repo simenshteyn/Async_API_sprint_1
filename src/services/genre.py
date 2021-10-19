@@ -20,39 +20,35 @@ class GenreService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_genre_by_id(self, genre_id: str) -> Optional[Genre]:
-        genre = await self._get_genre_by_id_from_cache(genre_id)
+    async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+        genre = await self._genre_from_cache(genre_id)
         if not genre:
-            genre = await self._get_genre_by_id_from_elastic(genre_id)
+            genre = await self._get_genre_from_elastic(genre_id)
             if not genre:
                 return None
-            await self._put_genre_by_id_to_cache(genre)
+            await self._put_genre_to_cache(genre)
         return genre
 
-    async def _get_genre_by_id_from_cache(self,
-                                          genre_id: str) -> Optional[Genre]:
+    async def _get_genre_from_elastic(self, genre_id: str) -> Optional[Genre]:
+        doc = await self.elastic.get('genre', genre_id)
+        return Genre(**doc['_source'])
+
+    async def _genre_from_cache(self, genre_id: str) -> Optional[Genre]:
         data = await self.redis.get(genre_id)
         if not data:
             return None
         genre = Genre.parse_raw(data)
         return genre
 
-    async def _get_genre_by_id_from_elastic(self,
-                                            genre_id: str) -> Optional[Genre]:
-        doc = await self.elastic.get('genre', genre_id)
-        return Genre(**doc['_source'])
-
-    async def _put_genre_by_id_to_cache(self, genre: Genre):
+    async def _put_genre_to_cache(self, genre: Genre):
         await self.redis.set(genre.id, genre.json(),
                              expire=GENRE_CACHE_EXPIRE_IN_SECONDS)
 
-    async def get_genre_list(self, page_number: int,
-                             page_size: int) -> Optional[List[Genre]]:
-        genre_list = await self._get_genre_list_from_cache(
-            page_number=page_number,
-            page_size=page_size)
+    async def get_genre_list(self, page_number: int, page_size: int) -> Optional[List[Genre]]:
+        genre_list = await self._genre_list_from_cache(page_number=page_number,
+                                                       page_size=page_size)
         if not genre_list:
-            genre_list = await self._get_genre_list_from_elastic(
+            genre_list = await self._genre_list_from_elastic(
                 page_number=page_number,
                 page_size=page_size
             )
@@ -65,19 +61,7 @@ class GenreService:
             )
         return genre_list
 
-    async def _get_genre_list_from_cache(self,
-                                         page_number: int,
-                                         page_size: int) -> Optional[
-        List[Genre]]:
-        data = await self.redis.get(f'genre_list:{page_number}:{page_size}')
-        if not data:
-            return None
-        return parse_raw_as(List[Genre], data)
-
-    async def _get_genre_list_from_elastic(self,
-                                           page_number: int,
-                                           page_size: int) -> Optional[
-        List[Genre]]:
+    async def _genre_list_from_elastic(self, page_number: int, page_size: int) -> Optional[List[Genre]]:
         docs = await self.elastic.search(
             index='genre',
             body={"from": page_number * page_size,
@@ -88,6 +72,12 @@ class GenreService:
             if 'name' in genre['_source']:
                 result.append(Genre(**genre['_source']))
         return result
+
+    async def _genre_list_from_cache(self, page_number: int, page_size: int) -> Optional[List[Genre]]:
+        data = await self.redis.get(f'genre_list:{page_number}:{page_size}')
+        if not data:
+            return None
+        return parse_raw_as(List[Genre], data)
 
     async def _put_genre_list_to_cache(self, page_number: int, page_size: int,
                                        genre_list: List[Genre]):
