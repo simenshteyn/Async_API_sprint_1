@@ -120,7 +120,9 @@ class FilmService:
         return film_list
 
     """############## Вынес сюда search ############
-    ### переделать, найти как избавиться от if####"""
+    ### переделать, найти как избавиться от if Серега если прочтешь это раньше чем я сделаю, можно тут 
+    Сделать твой запрос через body####"""
+
     async def _get_film_by_search_from_elastic(self, query: dict = None, search_string: str = None) -> list[Film]:
         if search_string:
             doc = await self.elastic.search(index='movies',
