@@ -1,40 +1,23 @@
 from http import HTTPStatus
-from typing import Union, Optional, List, Dict
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from models.models import Film
 from services.film import FilmService, get_film_service
 
 router = APIRouter()
 
-OBJ_ID = Union[str, str, UUID]
-OBJ_NAME = Union[str, str, UUID]
-
-
-class Film(BaseModel):
-    id: Union[int, str, UUID]
-    imdb_rating: Optional[float] = None
-    genre: Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    title: str
-    description: Optional[str] = None
-    director: Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    actors_names: Optional[List[str]] = None
-    writers_names: Optional[List[str]] = None
-    actors: Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    writers: Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-
 
 class FilmShort(BaseModel):
-    id: Union[int, str, UUID]
+    id: str
     title: str
-    imdb_rating: Optional[float] = None
+    imdb_rating: float = None
 
 
-@router.get('/', response_model=List[Film], response_model_exclude_unset=True)
-async def films_sorted(sort: Optional[str] = None,
-                       filter_genre: Optional[str] = None,
+@router.get('/', response_model=list[Film], response_model_exclude_unset=True)
+async def films_sorted(sort: str = None,
+                       filter_genre: str = None,
                        page_number: int = 0,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
@@ -75,11 +58,11 @@ async def films_sorted(sort: Optional[str] = None,
                             detail='sorting not found')
 
 
-@router.get('/search/{film_search_string}', response_model=List[FilmShort],
+@router.get('/search/{film_search_string}', response_model=list[FilmShort],
             response_model_exclude_unset=True)
 async def films_search(film_search_string: str,
                        film_service: FilmService = Depends(
-                           get_film_service)) -> List[FilmShort]:
+                           get_film_service)) -> list[FilmShort]:
     film_list = await film_service.get_film_by_search(film_search_string)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
@@ -113,11 +96,11 @@ async def film_details(film_id: str,
                 writers=film.writers)
 
 
-@router.get('/{film_id}/alike', response_model=List[FilmShort],
+@router.get('/{film_id}/alike', response_model=list[FilmShort],
             response_model_exclude_unset=True)
 async def film_alike(film_id: str,
                      film_service: FilmService = Depends(
-                         get_film_service)) -> List[FilmShort]:
+                         get_film_service)) -> list[FilmShort]:
     film_list = await film_service.get_film_alike(film_id)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
@@ -130,11 +113,11 @@ async def film_alike(film_id: str,
     return result
 
 
-@router.get('/genre/{genre_id}', response_model=List[FilmShort],
+@router.get('/genre/{genre_id}', response_model=list[FilmShort],
             response_model_exclude_unset=True)
 async def popular_in_genre(genre_id: str,
                            film_service: FilmService = Depends(
-                               get_film_service)) -> List[FilmShort]:
+                               get_film_service)) -> list[FilmShort]:
     film_list = await film_service.get_popular_in_genre(genre_id)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,

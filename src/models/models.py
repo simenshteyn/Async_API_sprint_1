@@ -3,12 +3,12 @@ from datetime import date
 
 import orjson
 
-from typing import Union, Optional, List, Dict
+# from typing import Union, Optional, List, Dict
 from pydantic import BaseModel
 
 
-OBJ_ID   = Union[str, str, UUID]
-OBJ_NAME = Union[str, str, UUID]
+# OBJ_ID   = Union[str, str, UUID]
+# OBJ_NAME = Union[str, str, UUID]
 
 
 def orjson_dumps(v, *, default):
@@ -23,27 +23,27 @@ class Orjson(BaseModel):
 
 
 class Film(Orjson):
-    id              : Union[int, str, UUID]
-    imdb_rating     : Optional[float] = None
-    genre           : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    title           : str
-    description     : Optional[str] = None
-    director        : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    actors_names    : Optional[List[str]] = None
-    writers_names   : Optional[List[str]] = None
-    actors          : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
-    writers         : Optional[List[Dict[OBJ_ID, OBJ_NAME]]] = None
+    id: str
+    imdb_rating: float
+    genre: list[dict[str, str]] = None
+    title: str
+    description: str = None
+    director: list[dict[str, str]] = None
+    actors_names: list[str] = None
+    writers_names: list[str] = None
+    actors: list[dict[str, str]] = None
+    writers: list[dict[str, str]] = None
 
 
 class Genre(Orjson):
-    id              : Union[int, str, UUID]
-    name            : str
-    description     : Optional[str] = None
+    id: str
+    name: str
+    description: str = None
 
 
 class Person(Orjson):
-    id              : Union[int, str, UUID]
-    full_name       : str
-    birth_date      : Optional[date] = None
-    role            : Optional[str] = None
-    film_ids        : Optional[List[Union[int, str, UUID]]]
+    id: str
+    full_name: str
+    birth_date: date = None
+    role: str = None
+    film_ids: list[str]
