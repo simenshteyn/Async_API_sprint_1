@@ -1,14 +1,8 @@
-from uuid import UUID
 from datetime import date
 
 import orjson
 
-# from typing import Union, Optional, List, Dict
 from pydantic import BaseModel
-
-
-# OBJ_ID   = Union[str, str, UUID]
-# OBJ_NAME = Union[str, str, UUID]
 
 
 def orjson_dumps(v, *, default):
@@ -47,3 +41,9 @@ class Person(Orjson):
     birth_date: date = None
     role: str = None
     film_ids: list[str]
+
+
+class FilmShort(BaseModel):
+    id: str
+    title: str
+    imdb_rating: float = None
