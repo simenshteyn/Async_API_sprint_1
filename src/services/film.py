@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional, List
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -15,7 +14,7 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 class FilmService(BaseService):
 
-    async def get_film_by_id(self, film_id: str) -> Optional[Film]:
+    async def get_film_by_id(self, film_id: str) -> Film:
         film = await self._get_by_id_from_cache(film_id, Film)
         if not film:
             film = await self._get_by_id_from_elastic(film_id, 'movies', Film)
@@ -25,7 +24,7 @@ class FilmService(BaseService):
         return film
 
     async def get_film_by_search(self,
-                                 search_string: str) -> Optional[List[Film]]:
+                                 search_string: str) -> list[Film]:
         film_list = await self._get_by_search_from_cache('film',
                                                          search_string, Film)
         if not film_list:
@@ -41,7 +40,7 @@ class FilmService(BaseService):
 
     async def get_film_sorted(self, sort_field: str, sort_type: str,
                               filter_genre: str, page_number: int,
-                              page_size: int) -> Optional[List[Film]]:
+                              page_size: int) -> list[Film]:
         query = {"sort": {sort_field: sort_type}}
         if filter_genre:
             query = query | {
@@ -67,7 +66,7 @@ class FilmService(BaseService):
             )
         return film_list
 
-    async def get_film_alike(self, film_id: str) -> Optional[List[Film]]:
+    async def get_film_alike(self, film_id: str) -> list[Film]:
         film_list = await self._get_list_from_cache(page_number=-1,
                                                     page_size=-1,
                                                     prefix=f'alike:{film_id}',
@@ -83,7 +82,7 @@ class FilmService(BaseService):
         return film_list
 
     async def _get_film_alike_from_elastic(self, film_id: str
-                                           ) -> Optional[List[Film]]:
+                                           ) -> list[Film]:
         film = await self.get_film_by_id(film_id)
         if not film or not film.genre:
             return None
@@ -99,8 +98,7 @@ class FilmService(BaseService):
                 result.extend(alike_films)
         return result
 
-    async def get_popular_in_genre(self, genre_id: str, ) -> Optional[
-        List[Film]]:
+    async def get_popular_in_genre(self, genre_id: str, ) -> list[Film]:
         film_list = await self.get_film_sorted(sort_field='imdb_rating',
                                                sort_type='desc',
                                                filter_genre=genre_id,

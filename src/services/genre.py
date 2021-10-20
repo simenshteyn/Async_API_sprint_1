@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional, List
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -15,7 +14,7 @@ GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 class GenreService(BaseService):
 
-    async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+    async def get_by_id(self, genre_id: str) -> Genre:
         genre = await self._get_by_id_from_cache(genre_id, Genre)
         if not genre:
             genre = await self._get_by_id_from_elastic(genre_id, 'genre', Genre)
@@ -26,7 +25,7 @@ class GenreService(BaseService):
         return genre
 
     async def get_genre_list(self, page_number: int, page_size: int) -> \
-            Optional[List[Genre]]:
+            list[Genre]:
         genre_list = await self._get_list_from_cache(page_number, page_size,
                                                      'genres', Genre)
         if not genre_list:
