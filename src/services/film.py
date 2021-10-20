@@ -30,7 +30,7 @@ class FilmService(BaseService):
                                                          search_string, Film)
         if not film_list:
             film_list = await self._get_by_search_from_elastic(
-                'movies', 'title', search_string, Film)
+                'movies', search_string, 'title', Film)
             if not film_list:
                 return None
             await self._put_by_search_to_cache('film',
