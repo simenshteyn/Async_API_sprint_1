@@ -15,7 +15,7 @@ async def films_sorted(sort: str = 'imdb_rating',
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
     query = {
-         'sort_field': 'imdb_rating',  # только по определенному полю что дано в задании, без проверки
+         'sort_field': 'imdb_rating',
          'sort_type': 'asc' if sort == 'imdb_rating' else 'desc',
          'filter_genre': filter_genre,
          'page_number': page_number,
@@ -59,6 +59,7 @@ async def film_details(film_id: str,
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
+
     return Film(id=film.id,
                 imdb_rating=film.imdb_rating,
                 genre=film.genre,
@@ -73,14 +74,13 @@ async def film_details(film_id: str,
 
 @router.get('/{film_id}/alike', response_model=list[FilmShort],
             response_model_exclude_unset=True)
-async def film_alike(film_id: str,
-                     film_service: FilmService = Depends(
-                         get_film_service)) -> list[FilmShort]:
+async def film_alike(film_id: str, film_service: FilmService = Depends(get_film_service)) -> list[FilmShort]:
     film_list = await film_service.get_film_alike(film_id)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')
     result = []
+    print(film_list)
     for film in film_list:
         result.append(FilmShort(id=film.id,
                                 title=film.title,
