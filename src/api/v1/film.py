@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 
 from models.models import Film, FilmShort
 from services.film import FilmService, get_film_service
@@ -15,41 +14,26 @@ async def films_sorted(sort: str = None,
                        page_number: int = 0,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
-    if sort == "imdb_rating":
-        film_list = await film_service.get_film_sorted(
-            sort_field='imdb_rating',
-            sort_type='asc',
-            filter_genre=filter_genre,
-            page_number=page_number,
-            page_size=page_size)
-        if not film_list:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                                detail='film not found')
-        result = []
-        for film in film_list:
-            result.append(FilmShort(id=film.id,
-                                    title=film.title,
-                                    imdb_rating=film.imdb_rating, ))
-        return result
-    elif sort == "-imdb_rating" or not sort:
-        film_list = await film_service.get_film_sorted(
-            sort_field='imdb_rating',
-            sort_type='desc',
-            filter_genre=filter_genre,
-            page_number=page_number,
-            page_size=page_size)
-        if not film_list:
-            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                                detail='film not found')
-        result = []
-        for film in film_list:
-            result.append(FilmShort(id=film.id,
-                                    title=film.title,
-                                    imdb_rating=film.imdb_rating, ))
-        return result
-    else:
+    sort_field = 'imdb_rating' if sort.endswith('imdb_rating') else None
+    if not sort_field:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='sorting not found')
+    sort_type = 'desc' if sort.startswith('-') else 'asc'
+    film_list = await film_service.get_film_sorted(
+        sort_field=sort_field,
+        sort_type=sort_type,
+        filter_genre=filter_genre,
+        page_number=page_number,
+        page_size=page_size)
+    if not film_list:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                            detail='film not found')
+    result = []
+    for film in film_list:
+        result.append(FilmShort(id=film.id,
+                                title=film.title,
+                                imdb_rating=film.imdb_rating, ))
+    return result
 
 
 @router.get('/search/{film_search_string}', response_model=list[FilmShort],
