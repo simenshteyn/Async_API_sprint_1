@@ -12,12 +12,12 @@ from .redis_cache import RedisCache
 
 class FilmService(RedisCache):
 
-    async def get_film(self, key: str, body: dict = None, query: dict = None) -> Film or list[Film] or None:
+    async def get_film(self, key: str, query: dict = None, body: dict = None) -> Film or list[Film] or None:
         film = await self._get_film_sorted_from_cache(key)
         if not film:
             if not body:
                 body = {'query': {"match_all": {}}}
-            film = await self._get_film_by_search_from_elastic(query, body=body)
+            film = await self._get_film_by_search_from_elastic(query=query, body=body)
             if not film:
                 return None
             await self._put_film_to_cache(key=key, film_list=film)

@@ -43,7 +43,14 @@ async def films_sorted(sort: str = 'imdb_rating',
 async def films_search(film_search_string: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> list[FilmShort]:
-    body = {'query': {"match": film_search_string}}
+    body = {"query": {
+                "match": {
+                    "title": {
+                        "query": film_search_string,
+                        "fuzziness": "auto"
+                    }
+                }
+            }}
     film_list = await film_service.get_film(key=film_search_string, body=body)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
