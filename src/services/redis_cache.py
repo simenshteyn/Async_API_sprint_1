@@ -9,7 +9,7 @@ from pydantic.json import pydantic_encoder
 
 from models.models import Film
 
-FILM_CACHE_EXPIRE_IN_SECONDS = 10 #60 * 5
+FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class RedisCache:

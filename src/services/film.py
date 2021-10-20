@@ -39,7 +39,6 @@ class FilmService(RedisCache):
                 }
                 body = {"query": {"match": {"genre.id": {"query": genre['id']}}}}
                 alike_films = await self._get_film_by_search_from_elastic(query=query, body=body)
-                print(alike_films)
                 if alike_films:
                     film_list.extend(alike_films)
             await self._put_film_to_cache(key=key, film_list=list(film_list))
