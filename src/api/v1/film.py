@@ -80,7 +80,6 @@ async def film_alike(film_id: str, film_service: FilmService = Depends(get_film_
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')
     result = []
-    print(film_list)
     for film in film_list:
         result.append(FilmShort(id=film.id,
                                 title=film.title,

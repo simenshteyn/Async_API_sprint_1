@@ -1,16 +1,13 @@
-import json
 from functools import lru_cache
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
-from pydantic import parse_raw_as
-from pydantic.json import pydantic_encoder
 
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.models import Film
-from redis_cache import RedisCache
+from .redis_cache import RedisCache
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 10 #60 * 5
 
@@ -41,9 +38,9 @@ class FilmService(RedisCache):
         film_list = await self._get_film_sorted_from_cache(key)
         if not film_list:
             if query.get('filter_genre'):
-                body = {'query': {"match_all": {}}}
-            else:
                 body = {"query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
+            else:
+                body = {'query': {"match_all": {}}}
             film_list = await self._get_film_by_search_from_elastic(query, body)
             if not film_list:
                 return None
@@ -53,18 +50,19 @@ class FilmService(RedisCache):
     async def get_film_alike(self, film_id: str) -> list[Film] or None:
         film_list = await self._get_film_sorted_from_cache('alike'+film_id)
         if not film_list:
-
             get_film_id = await self.get_film_by_id(film_id)
-            query = {
-                'sort_field': 'imdb_rating',
-                'sort_type': 'desc',
-                'filter_genre': get_film_id.id,
-                'page_number': 0,
-                'page_size': 1
-            }
-            film_list = await self.get_film_sorted(query)
-            if not film_list:
-                return None
+            film_list = []
+            for genre in get_film_id.genre:
+                query = {
+                    'sort_field': 'imdb_rating',
+                    'sort_type': 'desc',
+                    'filter_genre': genre['id'],
+                    'page_number': 0,
+                    'page_size': 1
+                }
+                alike_films = await self.get_film_sorted(query)
+                if alike_films:
+                    film_list.extend(alike_films)
             await self._put_film_to_cache(key='alike'+film_id, film_list=film_list)
 
         return film_list
@@ -93,8 +91,6 @@ class FilmService(RedisCache):
         for movie in doc['hits']['hits']:
             result.append(Film(**movie['_source']))
         return result
-
-
 
 
 @lru_cache()
