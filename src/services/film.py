@@ -21,8 +21,7 @@ class FilmService(BaseService):
             film = await self._get_by_id_from_elastic(film_id, 'movies', Film)
             if not film:
                 return None
-            await self._put_by_id_to_cache(film,
-                                           expire=FILM_CACHE_EXPIRE_IN_SECONDS)
+            await self._put_by_id_to_cache(film, FILM_CACHE_EXPIRE_IN_SECONDS)
         return film
 
     async def get_film_by_search(self,
@@ -36,7 +35,8 @@ class FilmService(BaseService):
                 return None
             await self._put_by_search_to_cache('film',
                                                search_string,
-                                               film_list)
+                                               film_list,
+                                               FILM_CACHE_EXPIRE_IN_SECONDS)
         return film_list
 
     async def get_film_sorted(self, sort_field: str, sort_type: str,
@@ -62,7 +62,8 @@ class FilmService(BaseService):
                 page_number,
                 page_size,
                 f'{sort_field}:{sort_type}:{filter_genre}:films',
-                film_list
+                film_list,
+                FILM_CACHE_EXPIRE_IN_SECONDS
             )
         return film_list
 
@@ -77,7 +78,8 @@ class FilmService(BaseService):
                 return None
             await self._put_list_to_cache(page_number=-1, page_size=-1,
                                           prefix=f'alike:{film_id}',
-                                          model_list=film_list)
+                                          model_list=film_list,
+                                          expire=FILM_CACHE_EXPIRE_IN_SECONDS)
         return film_list
 
     async def _get_film_alike_from_elastic(self, film_id: str

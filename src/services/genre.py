@@ -36,7 +36,8 @@ class GenreService(BaseService):
             if not genre_list:
                 return None
             await self._put_list_to_cache(page_number, page_size, 'genres',
-                                          genre_list)
+                                          genre_list,
+                                          GENRE_CACHE_EXPIRE_IN_SECONDS)
         return genre_list
 
 

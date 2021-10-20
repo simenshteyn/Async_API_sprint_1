@@ -60,9 +60,11 @@ class BaseService:
     async def _put_by_search_to_cache(self,
                                       prefix: str,
                                       search_string: str,
-                                      model_list: List[BaseModel]):
+                                      model_list: List[BaseModel],
+                                      expire: int):
         list_json = json.dumps(model_list, default=pydantic_encoder)
-        await self.redis.set(f'{prefix}:{search_string}', list_json)
+        await self.redis.set(f'{prefix}:{search_string}', list_json,
+                             expire=expire)
 
     async def _get_list_from_cache(self, page_number: int, page_size: int,
                                    prefix: str, model: BaseModel) -> Optional[
@@ -92,6 +94,8 @@ class BaseService:
         return result
 
     async def _put_list_to_cache(self, page_number: int, page_size: int,
-                                 prefix: str, model_list: List[BaseModel]):
+                                 prefix: str, model_list: List[BaseModel],
+                                 expire: int):
         list_json = json.dumps(model_list, default=pydantic_encoder)
-        await self.redis.set(f'{prefix}:{page_number}:{page_size}', list_json)
+        await self.redis.set(f'{prefix}:{page_number}:{page_size}', list_json,
+                             expire=expire)

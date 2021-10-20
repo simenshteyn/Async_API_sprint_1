@@ -38,7 +38,8 @@ class PersonService(BaseService):
             if not person_list:
                 return None
             await self._put_list_to_cache(page_number, page_size, 'persons',
-                                          person_list)
+                                          person_list,
+                                          PERSON_CACHE_EXPIRE_IN_SECONDS)
         return person_list
 
     async def get_by_search(self, search_string: str) -> Optional[
@@ -54,7 +55,8 @@ class PersonService(BaseService):
             if not person_list:
                 return None
             await self._put_by_search_to_cache('person', search_string,
-                                               person_list)
+                                               person_list,
+                                               PERSON_CACHE_EXPIRE_IN_SECONDS)
         return person_list
 
 
