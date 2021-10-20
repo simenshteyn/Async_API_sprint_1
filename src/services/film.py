@@ -24,7 +24,7 @@ class FilmService:
     async def get_film_by_id(self, film_id: str) -> Film:
         film = await self._get_film_sorted_from_cache(film_id)
         if not film:
-            film = await self._get_film_by_search_from_elastic(search_string=film_id)
+            film = await self._get_film_by_search_from_elastic(id=film_id)
             if not film:
                 return None
             film = film[0]  # все что придумал
@@ -90,12 +90,14 @@ class FilmService:
 
     """############## Вынес сюда search ############"""
 
-    async def _get_film_by_search_from_elastic(self, query: dict = None, search_string: str = None) -> list[Film]:
+    async def _get_film_by_search_from_elastic(self, query: dict = None, search_string: str = None, id = None) -> list[Film]:
         body = {'query': {"match_all" : {}}}  # просто все фильмы
-        if query.get('filter_genre'):  # по жанру
+        if query and query.get('filter_genre'):  # по жанру
             body = {"query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
         if search_string:
-            body = {'query': {"match": {search_string}}}  # по id
+            body = {'query': {"match": {search_string}}}# по id - name
+        if id:
+            body = {'query': {"match": {'_id': id}}}
         doc = await self.elastic.search(index='movies',
                                         body = body,
                                         size = query.get('page_size') if query else None,
