@@ -21,7 +21,12 @@ async def films_sorted(sort: str = 'imdb_rating',
          'page_number': page_number,
          'page_size': page_size
     }
-    film_list = await film_service.get_film_sorted(query)
+    key = ''.join([str(b) for i, b in query.items()])
+    if filter_genre:
+        body = {"query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
+    else:
+        body = {'query': {"match_all": {}}}
+    film_list = await film_service.get_film(key=key, query=query, body=body)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
@@ -38,7 +43,8 @@ async def films_sorted(sort: str = 'imdb_rating',
 async def films_search(film_search_string: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> list[FilmShort]:
-    film_list = await film_service.get_film_by_search(film_search_string)
+    body = {'query': {"match": film_search_string}}
+    film_list = await film_service.get_film(key=film_search_string, body=body)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
@@ -55,11 +61,12 @@ async def films_search(film_search_string: str,
 async def film_details(film_id: str,
                        film_service: FilmService = Depends(
                            get_film_service)) -> Film:
-    film = await film_service.get_film_by_id(film_id)
+    body = {'query': {"match": {'_id': film_id}}}
+    film = await film_service.get_film(key=film_id, body=body)
     if not film:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
-
+    film = film[0]
     return Film(id=film.id,
                 imdb_rating=film.imdb_rating,
                 genre=film.genre,
@@ -75,7 +82,8 @@ async def film_details(film_id: str,
 @router.get('/{film_id}/alike', response_model=list[FilmShort],
             response_model_exclude_unset=True)
 async def film_alike(film_id: str, film_service: FilmService = Depends(get_film_service)) -> list[FilmShort]:
-    film_list = await film_service.get_film_alike(film_id)
+    key = 'alike'+film_id
+    film_list = await film_service.get_film_alike(film_id=film_id, key=key)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')
@@ -83,7 +91,7 @@ async def film_alike(film_id: str, film_service: FilmService = Depends(get_film_
     for film in film_list:
         result.append(FilmShort(id=film.id,
                                 title=film.title,
-                                imdb_rating=film.imdb_rating, ))
+                                imdb_rating=film.imdb_rating,))
     return result
 
 
@@ -92,7 +100,15 @@ async def film_alike(film_id: str, film_service: FilmService = Depends(get_film_
 async def popular_in_genre(genre_id: str,
                            film_service: FilmService = Depends(
                                get_film_service)) -> list[FilmShort]:
-    film_list = await film_service.get_popular_in_genre(genre_id)
+    query = {
+                'sort_field': 'imdb_rating',
+                'sort_type': 'desc',
+                'filter_genre': genre_id,
+                'page_number': 0,
+                'page_size': 30
+            }
+    key = ''.join([str(b) for i, b in query.items()])
+    film_list = await film_service.get_film(key=key, query=query)
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')

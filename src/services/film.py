@@ -9,77 +9,44 @@ from db.redis import get_redis
 from models.models import Film
 from .redis_cache import RedisCache
 
-FILM_CACHE_EXPIRE_IN_SECONDS = 10 #60 * 5
-
 
 class FilmService(RedisCache):
-    async def get_film_by_id(self, film_id: str) -> Film:
-        film = await self._get_film_sorted_from_cache(film_id)
+
+    async def get_film(self, key: str, body: dict = None, query: dict = None) -> Film or list[Film] or None:
+        film = await self._get_film_sorted_from_cache(key)
         if not film:
-            body = {'query': {"match": {'_id': film_id}}}
-            film = await self._get_film_by_search_from_elastic(body=body)
+            if not body:
+                body = {'query': {"match_all": {}}}
+            film = await self._get_film_by_search_from_elastic(query, body=body)
             if not film:
                 return None
-            await self._put_film_to_cache(key=film_id, film_list=film)
-        return film[0]
+            await self._put_film_to_cache(key=key, film_list=film)
+        return film
 
-    async def get_film_by_search(self, search_string: str) -> list[Film] or None:
-        film_list = await self._get_film_sorted_from_cache(search_string)
-        if not film_list:
-            body = {'query': {"match": search_string}}
-            film_list = await self._get_film_by_search_from_elastic(body=body)
-            if not film_list:
-                return None
-            await self._put_film_to_cache(key=search_string, film_list=film_list)
-        return film_list
-
-    async def get_film_sorted(self, query: dict) -> list[Film] or None:
-        key = ''.join([str(b) for i, b in query.items()])
+    async def get_film_alike(self, film_id: str, key: str) -> list[Film] or None:
         film_list = await self._get_film_sorted_from_cache(key)
         if not film_list:
-            if query.get('filter_genre'):
-                body = {"query": {"match": {"genre.id": {"query": query.get('filter_genre')}}}}
-            else:
-                body = {'query': {"match_all": {}}}
-            film_list = await self._get_film_by_search_from_elastic(query, body)
-            if not film_list:
-                return None
-            await self._put_film_to_cache(key=key, film_list=film_list)
-        return film_list
-
-    async def get_film_alike(self, film_id: str) -> list[Film] or None:
-        film_list = await self._get_film_sorted_from_cache('alike'+film_id)
-        if not film_list:
-            get_film_id = await self.get_film_by_id(film_id)
+            body = {'query': {"match": {'_id': film_id}}}
+            get_films = await self.get_film(key=film_id, body=body)
+            film = get_films[0]
             film_list = []
-            for genre in get_film_id.genre:
+            for genre in film.genre:
                 query = {
                     'sort_field': 'imdb_rating',
                     'sort_type': 'desc',
-                    'filter_genre': genre['id'],
                     'page_number': 0,
-                    'page_size': 1
+                    'page_size': 10
                 }
-                alike_films = await self.get_film_sorted(query)
+                body = {"query": {"match": {"genre.id": {"query": genre['id']}}}}
+                alike_films = await self._get_film_by_search_from_elastic(query=query, body=body)
+                print(alike_films)
                 if alike_films:
                     film_list.extend(alike_films)
-            await self._put_film_to_cache(key='alike'+film_id, film_list=film_list)
+            await self._put_film_to_cache(key=key, film_list=list(film_list))
 
         return film_list
 
-    async def get_popular_in_genre(self, genre_id: str,) -> list[Film]:
-        query = {
-            'sort_field': 'imdb_rating',
-            'sort_type': 'desc',
-            'filter_genre': genre_id,
-            'page_number': 0,
-            'page_size': 30
-        }
-        film_list = await self.get_film_sorted(query)
-        return film_list
-
-    async def _get_film_by_search_from_elastic(
-            self, query: dict = None, body = None) -> list[Film]:
+    async def _get_film_by_search_from_elastic(self, query: dict = None, body: dict = None) -> list[Film]:
         doc = await self.elastic.search(
             index='movies',
             body = body,
