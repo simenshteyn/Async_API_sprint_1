@@ -1,22 +1,11 @@
 from http import HTTPStatus
-from typing import Union, Optional, List
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 
+from models.models import Genre
 from services.genre import GenreService, get_genre_service
 
 router = APIRouter()
-
-OBJ_ID = Union[str, str, UUID]
-OBJ_NAME = Union[str, str, UUID]
-
-
-class Genre(BaseModel):
-    id: Union[int, str, UUID]
-    name: str
-    description: Optional[str] = None
 
 
 @router.get('/{genre_id}', response_model=Genre,
@@ -34,11 +23,11 @@ async def genre_details(genre_id: str,
                  )
 
 
-@router.get('/', response_model=List[Genre], response_model_exclude_unset=True)
+@router.get('/', response_model=list[Genre], response_model_exclude_unset=True)
 async def genre_list(
         page_number: int = 0,
         page_size: int = 50,
-        genre_service: GenreService = Depends(get_genre_service)) -> List[
+        genre_service: GenreService = Depends(get_genre_service)) -> list[
     Genre]:
     genre_list = await genre_service.get_genre_list(page_number=page_number,
                                                     page_size=page_size)

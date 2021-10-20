@@ -1,5 +1,4 @@
 import json
-from typing import Optional, List
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -13,7 +12,7 @@ class BaseService:
         self.elastic = elastic
 
     async def _get_by_id_from_cache(self, id: str,
-                                    model: BaseModel) -> Optional[BaseModel]:
+                                    model: BaseModel) -> BaseModel:
         data = await self.redis.get(id)
         if not data:
             return None
@@ -21,7 +20,7 @@ class BaseService:
 
     async def _get_by_id_from_elastic(self, id: str,
                                       es_index: str,
-                                      model: BaseModel) -> Optional[BaseModel]:
+                                      model: BaseModel) -> BaseModel:
         doc = await self.elastic.get(es_index, id)
         return model(**doc['_source'])
 
@@ -29,19 +28,18 @@ class BaseService:
         await self.redis.set(model.id, model.json(), expire=expire)
 
     async def _get_by_search_from_cache(self, prefix: str, search_string: str,
-                                        model: BaseModel) -> Optional[
-        List[BaseModel]]:
+                                        model: BaseModel) -> list[BaseModel]:
         data = await self.redis.get(f'{prefix}:{search_string}')
         if not data:
             return None
-        return parse_raw_as(List[model], data)
+        return parse_raw_as(list[model], data)
 
     async def _get_by_search_from_elastic(
             self,
             es_index: str,
             search_string: str,
             search_field: str,
-            model: BaseModel) -> Optional[List[BaseModel]]:
+            model: BaseModel) -> list[BaseModel]:
         doc = await self.elastic.search(
             index=es_index,
             body={"query": {
@@ -60,19 +58,18 @@ class BaseService:
     async def _put_by_search_to_cache(self,
                                       prefix: str,
                                       search_string: str,
-                                      model_list: List[BaseModel],
+                                      model_list: list[BaseModel],
                                       expire: int):
         list_json = json.dumps(model_list, default=pydantic_encoder)
         await self.redis.set(f'{prefix}:{search_string}', list_json,
                              expire=expire)
 
     async def _get_list_from_cache(self, page_number: int, page_size: int,
-                                   prefix: str, model: BaseModel) -> Optional[
-        List[BaseModel]]:
+                                   prefix: str, model: BaseModel) -> list[BaseModel]:
         data = await self.redis.get(f'{prefix}:{page_number}:{page_size}')
         if not data:
             return None
-        return parse_raw_as(List[model], data)
+        return parse_raw_as(list[model], data)
 
     async def _get_list_from_elastic(
             self,
@@ -80,7 +77,7 @@ class BaseService:
             page_size: int,
             es_index: str,
             model: BaseModel,
-            query: dict = None) -> Optional[List[BaseModel]]:
+            query: dict = None) -> list[BaseModel]:
         body = {"from": page_number * page_size, "size": page_size}
         if query:
             body = body | query
@@ -94,7 +91,7 @@ class BaseService:
         return result
 
     async def _put_list_to_cache(self, page_number: int, page_size: int,
-                                 prefix: str, model_list: List[BaseModel],
+                                 prefix: str, model_list: list[BaseModel],
                                  expire: int):
         list_json = json.dumps(model_list, default=pydantic_encoder)
         await self.redis.set(f'{prefix}:{page_number}:{page_size}', list_json,

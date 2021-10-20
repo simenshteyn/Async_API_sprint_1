@@ -1,6 +1,5 @@
 version: '3.8'
 
-
 services:
   ma_postgres:
     image: postgres:13.4
@@ -70,3 +69,6 @@ services:
       - .env
     ports:
       - '8000:8000'
+    logging:
+      options:
+        max-size: 50m

@@ -1,5 +1,4 @@
 from functools import lru_cache
-from typing import Optional, List
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -15,7 +14,7 @@ PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 class PersonService(BaseService):
 
-    async def get_by_id(self, person_id: str) -> Optional[Person]:
+    async def get_by_id(self, person_id: str) -> Person:
         person = await self._get_by_id_from_cache(person_id, Person)
         if not person:
             person = await self._get_by_id_from_elastic(person_id,
@@ -27,7 +26,7 @@ class PersonService(BaseService):
         return person
 
     async def get_person_list(self, page_number: int, page_size: int) -> \
-            Optional[List[Person]]:
+            list[Person]:
         person_list = await self._get_list_from_cache(page_number, page_size,
                                                       'persons', Person)
         if not person_list:
@@ -42,8 +41,7 @@ class PersonService(BaseService):
                                           PERSON_CACHE_EXPIRE_IN_SECONDS)
         return person_list
 
-    async def get_by_search(self, search_string: str) -> Optional[
-        List[Person]]:
+    async def get_by_search(self, search_string: str) -> list[Person]:
         person_list = await self._get_by_search_from_cache('person',
                                                            search_string,
                                                            Person)
