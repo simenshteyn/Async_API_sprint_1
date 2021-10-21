@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Optional
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -16,13 +17,15 @@ class GenreService(BaseService):
     es_index = 'genre'
     model = Genre
 
-    async def get_by_id(self, genre_id: str) -> Genre:
-        return await self._get_by_id(genre_id, GENRE_CACHE_EXPIRE_IN_SECONDS)
+    async def get_by_id(self, genre_id: str) -> Optional[Genre]:
+        return await self._get_by_id(genre_id, GENRE_CACHE_EXPIRE_IN_SECONDS,
+                                     self.model, self.es_index)
 
     async def get_genre_list(
-            self, page_number: int, page_size: int) -> list[Genre]:
+            self, page_number: int, page_size: int) -> Optional[list[Genre]]:
         return await self._get_list(page_number, page_size,
-                                    GENRE_CACHE_EXPIRE_IN_SECONDS)
+                                    GENRE_CACHE_EXPIRE_IN_SECONDS,
+                                    self.es_index, self.model)
 
 
 @lru_cache()

@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 from aioredis import Redis
 from elasticsearch import AsyncElasticsearch
@@ -12,40 +13,42 @@ class BaseService:
         self.elastic = elastic
 
     async def _get_by_id(
-            self, id: str, cach_expire: int) -> BaseModel:
-        obj = await self._get_by_id_from_cache(id)
-        if not obj:
-            obj = await self._get_by_id_from_elastic(id)
-            if not obj:
+            self, id: str, cache_expire: int, model: BaseModel, es_index: str
+    ) -> Optional[BaseModel]:
+        some_obj = await self._get_by_id_from_cache(id, model)
+        if not some_obj:
+            some_obj = await self._get_by_id_from_elastic(id, model, es_index)
+            if not some_obj:
                 return None
-            await self._put_by_id_to_cache(obj, cach_expire)
-        return obj
+            await self._put_by_id_to_cache(some_obj, cache_expire)
+        return some_obj
 
     async def _get_by_id_from_cache(
-            self, id: str) -> BaseModel:
+            self, id: str, model: BaseModel) -> Optional[BaseModel]:
         data = await self.redis.get(id)
         if not data:
             return None
-        return self.model.parse_raw(data)
+        return model.parse_raw(data)
 
     async def _get_by_id_from_elastic(
-            self, id: str) -> BaseModel:
-        doc = await self.elastic.get(self.es_index, id)
-        return self.model(**doc['_source'])
+            self, id: str, model: BaseModel, es_index: str) -> BaseModel:
+        doc = await self.elastic.get(es_index, id)
+        return model(**doc['_source'])
 
     async def _put_by_id_to_cache(self, model: BaseModel, expire: int):
         await self.redis.set(model.id, model.json(), expire=expire)
 
     async def _get_by_search(self, search_string: str, search_field: str,
-                             expire: int) -> list[BaseModel]:
+                             expire: int, es_index: str, model: BaseModel
+                             ) -> Optional[list[BaseModel]]:
         obj_list = await self._get_by_search_from_cache(
-            self.es_index, search_string, self.model)
+            es_index, search_string, model)
         if not obj_list:
             obj_list = await self._get_by_search_from_elastic(
-                search_string, search_field)
+                search_string, search_field, es_index, model)
             if not obj_list:
                 return None
-            await self._put_by_search_to_cache(self.es_index,
+            await self._put_by_search_to_cache(es_index,
                                                search_string,
                                                obj_list,
                                                expire)
@@ -53,16 +56,17 @@ class BaseService:
 
     async def _get_by_search_from_cache(
             self, prefix: str, search_string: str, model: BaseModel
-    ) -> list[BaseModel]:
+    ) -> Optional[list[BaseModel]]:
         data = await self.redis.get(f'{prefix}:{search_string}')
         if not data:
             return None
         return parse_raw_as(list[model], data)
 
     async def _get_by_search_from_elastic(
-            self, search_string: str, search_field: str) -> list[BaseModel]:
+            self, search_string: str, search_field: str,
+            es_index: str, model: BaseModel) -> list[BaseModel]:
         doc = await self.elastic.search(
-            index=self.es_index,
+            index=es_index,
             body={"query": {
                 "match": {
                     search_field: {
@@ -71,7 +75,7 @@ class BaseService:
                     }
                 }
             }})
-        return [self.model(**d['_source']) for d in doc['hits']['hits']]
+        return [model(**d['_source']) for d in doc['hits']['hits']]
 
     async def _put_by_search_to_cache(
             self, prefix: str, search_string: str, model_list: list[BaseModel],
@@ -81,38 +85,41 @@ class BaseService:
                              expire=expire)
 
     async def _get_list(
-            self, page_number: int, page_size: int, expire: int
-    ) -> list[BaseModel]:
+            self, page_number: int, page_size: int,
+            expire: int, es_index: str, model: BaseModel
+    ) -> Optional[list[BaseModel]]:
         obj_list = await self._get_list_from_cache(
-            page_number, page_size, self.es_index)
+            page_number, page_size, es_index, model)
         if not obj_list:
             obj_list = await self._get_list_from_elastic(page_number,
-                                                         page_size)
+                                                         page_size,
+                                                         es_index,
+                                                         model)
             if not obj_list:
                 return None
             await self._put_list_to_cache(
-                page_number, page_size, self.es_index, obj_list, expire)
+                page_number, page_size, es_index, obj_list, expire)
         return obj_list
 
     async def _get_list_from_cache(
-            self, page_number: int, page_size: int, prefix: str
-    ) -> list[BaseModel]:
+            self, page_number: int, page_size: int, prefix: str, model: BaseModel
+    ) -> Optional[list[BaseModel]]:
         data = await self.redis.get(f'{prefix}:{page_number}:{page_size}')
         if not data:
             return None
-        return parse_raw_as(list[self.model], data)
+        return parse_raw_as(list[model], data)
 
     async def _get_list_from_elastic(
-            self, page_number: int, page_size: int, query: dict = None
-    ) -> list[BaseModel]:
+            self, page_number: int, page_size: int, es_index: str,
+            model: BaseModel, query: dict = None) -> list[BaseModel]:
         body = {"from": page_number * page_size, "size": page_size}
         if query:
             body = body | query
         docs = await self.elastic.search(
-            index=self.es_index,
+            index=es_index,
             body=body
         )
-        return [self.model(**d['_source']) for d in docs['hits']['hits']]
+        return [model(**d['_source']) for d in docs['hits']['hits']]
 
     async def _put_list_to_cache(
             self, page_number: int, page_size: int, prefix: str,
