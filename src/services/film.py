@@ -34,11 +34,9 @@ class FilmService(BaseService):
         if filter_genre:
             query = query | {
                 "query": {"match": {"genre.id": {"query": filter_genre}}}}
-        film_list = await self._get_list_from_cache(
-            page_number,
-            page_size,
-            f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
-            self.model
+        film_list = await self._get_from_cache(
+            key=f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
+            model=self.model
         )
         if not film_list:
             film_list = await self._get_list_from_elastic(page_number,
@@ -48,27 +46,24 @@ class FilmService(BaseService):
                                                           query=query)
             if not film_list:
                 return None
-            await self._put_list_to_cache(
-                page_number,
-                page_size,
-                f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
-                film_list,
-                FILM_CACHE_EXPIRE_IN_SECONDS
+            await self._put_to_cache(
+                model_list=film_list,
+                expire=FILM_CACHE_EXPIRE_IN_SECONDS,
+                key=f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}'
             )
         return film_list
 
     async def get_film_alike(self, film_id: str) -> list[Film]:
-        film_list = await self._get_list_from_cache(
-            page_number=-1, page_size=-1,
-            prefix=f'alike:{film_id}', model=self.model)
+        film_list = await self._get_from_cache(
+            key=f'alike:{film_id}',
+            model=self.model
+        )
         if not film_list:
             film_list = await self._get_film_alike_from_elastic(film_id)
             if not film_list:
                 return None
-            await self._put_list_to_cache(page_number=-1, page_size=-1,
-                                          prefix=f'alike:{film_id}',
-                                          model_list=film_list,
-                                          expire=FILM_CACHE_EXPIRE_IN_SECONDS)
+            await self._put_to_cache(film_list, FILM_CACHE_EXPIRE_IN_SECONDS,
+                                     f'alike:{film_id}')
         return film_list
 
     async def _get_film_alike_from_elastic(

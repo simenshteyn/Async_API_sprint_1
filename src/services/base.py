@@ -41,26 +41,16 @@ class BaseService:
     async def _get_by_search(self, search_string: str, search_field: str,
                              expire: int, es_index: str, model: BaseModel
                              ) -> Optional[list[BaseModel]]:
-        obj_list = await self._get_by_search_from_cache(
-            es_index, search_string, model)
+        obj_list = await self._get_from_cache(
+            key=f'{es_index}:{search_string}', model=model)
         if not obj_list:
             obj_list = await self._get_by_search_from_elastic(
                 search_string, search_field, es_index, model)
             if not obj_list:
                 return None
-            await self._put_by_search_to_cache(es_index,
-                                               search_string,
-                                               obj_list,
-                                               expire)
+            await self._put_to_cache(key=f'{es_index}:{search_string}',
+                                     model_list=obj_list, expire=expire)
         return obj_list
-
-    async def _get_by_search_from_cache(
-            self, prefix: str, search_string: str, model: BaseModel
-    ) -> Optional[list[BaseModel]]:
-        data = await self.redis.get(f'{prefix}:{search_string}')
-        if not data:
-            return None
-        return parse_raw_as(list[model], data)
 
     async def _get_by_search_from_elastic(
             self, search_string: str, search_field: str,
@@ -77,19 +67,13 @@ class BaseService:
             }})
         return [model(**d['_source']) for d in doc['hits']['hits']]
 
-    async def _put_by_search_to_cache(
-            self, prefix: str, search_string: str, model_list: list[BaseModel],
-            expire: int):
-        list_json = json.dumps(model_list, default=pydantic_encoder)
-        await self.redis.set(f'{prefix}:{search_string}', list_json,
-                             expire=expire)
-
     async def _get_list(
             self, page_number: int, page_size: int,
             expire: int, es_index: str, model: BaseModel
     ) -> Optional[list[BaseModel]]:
-        obj_list = await self._get_list_from_cache(
-            page_number, page_size, es_index, model)
+        obj_list = await self._get_from_cache(
+            key=f'{es_index}:{page_number}:{page_size}', model=model
+        )
         if not obj_list:
             obj_list = await self._get_list_from_elastic(page_number,
                                                          page_size,
@@ -97,17 +81,10 @@ class BaseService:
                                                          model)
             if not obj_list:
                 return None
-            await self._put_list_to_cache(
-                page_number, page_size, es_index, obj_list, expire)
+            await self._put_to_cache(
+                key=f'{es_index}:{page_number}:{page_size}',
+                model_list=obj_list, expire=expire)
         return obj_list
-
-    async def _get_list_from_cache(
-            self, page_number: int, page_size: int, prefix: str, model: BaseModel
-    ) -> Optional[list[BaseModel]]:
-        data = await self.redis.get(f'{prefix}:{page_number}:{page_size}')
-        if not data:
-            return None
-        return parse_raw_as(list[model], data)
 
     async def _get_list_from_elastic(
             self, page_number: int, page_size: int, es_index: str,
@@ -121,9 +98,16 @@ class BaseService:
         )
         return [model(**d['_source']) for d in docs['hits']['hits']]
 
-    async def _put_list_to_cache(
-            self, page_number: int, page_size: int, prefix: str,
-            model_list: list[BaseModel], expire: int):
+    async def _put_to_cache(self, model_list: list[BaseModel],
+                            expire: int, key: str):
         list_json = json.dumps(model_list, default=pydantic_encoder)
-        await self.redis.set(f'{prefix}:{page_number}:{page_size}', list_json,
-                             expire=expire)
+        await self.redis.set(key, list_json, expire=expire)
+
+    async def _get_from_cache(
+            self, key: str, model: BaseModel) -> Optional[list[BaseModel]]:
+        data = await self.redis.get(key)
+        if not data:
+            return None
+        return parse_raw_as(list[model], data)
+
+
