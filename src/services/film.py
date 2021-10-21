@@ -15,23 +15,11 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 class FilmService(BaseService):
 
     async def get_film_by_id(self, film_id: str) -> Film:
-        return await self._get_by_id(
-            film_id, self.es_index, self.model, FILM_CACHE_EXPIRE_IN_SECONDS
-        )
+        return await self._get_by_id(film_id, FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def get_film_by_search(self, search_string: str) -> list[Film]:
-        film_list = await self._get_by_search_from_cache(
-            self.es_index, search_string, self.model)
-        if not film_list:
-            film_list = await self._get_by_search_from_elastic(
-                self.es_index, search_string, 'title', self.model)
-            if not film_list:
-                return None
-            await self._put_by_search_to_cache(self.es_index,
-                                               search_string,
-                                               film_list,
-                                               FILM_CACHE_EXPIRE_IN_SECONDS)
-        return film_list
+        return await self._get_by_search(search_string, 'title',
+                                         FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def get_film_sorted(
             self, sort_field: str, sort_type: str, filter_genre: str,
@@ -44,13 +32,10 @@ class FilmService(BaseService):
             page_number,
             page_size,
             f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
-            self.model
         )
         if not film_list:
             film_list = await self._get_list_from_elastic(page_number,
                                                           page_size,
-                                                          self.es_index,
-                                                          self.model,
                                                           query=query)
             if not film_list:
                 return None
@@ -64,10 +49,8 @@ class FilmService(BaseService):
         return film_list
 
     async def get_film_alike(self, film_id: str) -> list[Film]:
-        film_list = await self._get_list_from_cache(page_number=-1,
-                                                    page_size=-1,
-                                                    prefix=f'alike:{film_id}',
-                                                    model=self.model)
+        film_list = await self._get_list_from_cache(
+            page_number=-1, page_size=-1, prefix=f'alike:{film_id}')
         if not film_list:
             film_list = await self._get_film_alike_from_elastic(film_id)
             if not film_list:
