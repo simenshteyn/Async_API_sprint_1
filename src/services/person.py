@@ -15,44 +15,35 @@ PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 class PersonService(BaseService):
 
     async def get_by_id(self, person_id: str) -> Person:
-        person = await self._get_by_id_from_cache(person_id, Person)
-        if not person:
-            person = await self._get_by_id_from_elastic(person_id,
-                                                        'person', Person)
-            if not person:
-                return None
-            await self._put_by_id_to_cache(person,
-                                           PERSON_CACHE_EXPIRE_IN_SECONDS)
-        return person
+        return await self._get_by_id(
+            person_id, self.es_index, self.model,
+            PERSON_CACHE_EXPIRE_IN_SECONDS
+        )
 
-    async def get_person_list(self, page_number: int, page_size: int) -> \
-            list[Person]:
-        person_list = await self._get_list_from_cache(page_number, page_size,
-                                                      'persons', Person)
+    async def get_person_list(
+            self, page_number: int, page_size: int) -> list[Person]:
+        person_list = await self._get_list_from_cache(
+            page_number, page_size, self.es_index, self.model)
         if not person_list:
-            person_list = await self._get_list_from_elastic(page_number,
-                                                            page_size,
-                                                            'person',
-                                                            Person)
+            person_list = await self._get_list_from_elastic(
+                page_number, page_size, self.es_index, self.model)
             if not person_list:
                 return None
-            await self._put_list_to_cache(page_number, page_size, 'persons',
+            await self._put_list_to_cache(page_number, page_size,
+                                          self.es_index,
                                           person_list,
                                           PERSON_CACHE_EXPIRE_IN_SECONDS)
         return person_list
 
     async def get_by_search(self, search_string: str) -> list[Person]:
-        person_list = await self._get_by_search_from_cache('person',
-                                                           search_string,
-                                                           Person)
+        person_list = await self._get_by_search_from_cache(
+            self.es_index, search_string, self.model)
         if not person_list:
-            person_list = await self._get_by_search_from_elastic('person',
-                                                                 search_string,
-                                                                 'full_name',
-                                                                 Person)
+            person_list = await self._get_by_search_from_elastic(
+                self.es_index, search_string, 'full_name', self.model)
             if not person_list:
                 return None
-            await self._put_by_search_to_cache('person', search_string,
+            await self._put_by_search_to_cache(self.es_index, search_string,
                                                person_list,
                                                PERSON_CACHE_EXPIRE_IN_SECONDS)
         return person_list
@@ -63,4 +54,4 @@ def get_person_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic)
+    return PersonService(redis, elastic, 'person', Person)

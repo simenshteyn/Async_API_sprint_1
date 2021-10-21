@@ -6,8 +6,7 @@ from fastapi.responses import ORJSONResponse
 
 from api.v1 import film, genre, person
 from core import config
-from db import elastic
-from db import redis
+from db import elastic, redis
 
 app = FastAPI(
     title=config.PROJECT_NAME,

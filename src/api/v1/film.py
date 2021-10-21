@@ -14,11 +14,15 @@ async def films_sorted(sort: str = None,
                        page_number: int = 0,
                        page_size: int = 20,
                        film_service: FilmService = Depends(get_film_service)):
-    sort_field = 'imdb_rating' if sort.endswith('imdb_rating') else None
-    if not sort_field:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
-                            detail='sorting not found')
-    sort_type = 'desc' if sort.startswith('-') else 'asc'
+    if not sort:
+        sort_field = 'imdb_rating'
+        sort_type = 'desc'
+    else:
+        sort_field = 'imdb_rating' if sort.endswith('imdb_rating') else None
+        if not sort_field:
+            raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
+                                detail='sorting not found')
+        sort_type = 'desc' if sort.startswith('-') else 'asc'
     film_list = await film_service.get_film_sorted(
         sort_field=sort_field,
         sort_type=sort_type,
