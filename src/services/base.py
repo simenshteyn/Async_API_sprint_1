@@ -39,7 +39,8 @@ class BaseService:
     async def _put_by_id_to_cache(self, model: BaseModel, expire: int):
         await self.redis.set(model.id, model.json(), expire=expire)
 
-    async def _get_by_search(self, search_string: str, search_field: str, expire: int) -> list[BaseModel]:
+    async def _get_by_search(self, search_string: str, search_field: str,
+                             expire: int) -> list[BaseModel]:
         obj_list = await self._get_by_search_from_cache(
             self.es_index, search_string, self.model)
         if not obj_list:
@@ -73,10 +74,7 @@ class BaseService:
                     }
                 }
             }})
-        result = []
-        for d in doc['hits']['hits']:
-            result.append(self.model(**d['_source']))
-        return result
+        return [self.model(**d['_source']) for d in doc['hits']['hits']]
 
     async def _put_by_search_to_cache(
             self, prefix: str, search_string: str, model_list: list[BaseModel],
@@ -84,6 +82,7 @@ class BaseService:
         list_json = json.dumps(model_list, default=pydantic_encoder)
         await self.redis.set(f'{prefix}:{search_string}', list_json,
                              expire=expire)
+
     async def _get_list(
             self, page_number: int, page_size: int, expire: int
     ) -> list[BaseModel]:
@@ -98,7 +97,6 @@ class BaseService:
                 page_number, page_size, self.es_index, obj_list, expire)
         return obj_list
 
-
     async def _get_list_from_cache(
             self, page_number: int, page_size: int, prefix: str
     ) -> list[BaseModel]:
@@ -108,7 +106,8 @@ class BaseService:
         return parse_raw_as(list[self.model], data)
 
     async def _get_list_from_elastic(
-            self, page_number: int, page_size: int, query: dict = None) -> list[BaseModel]:
+            self, page_number: int, page_size: int, query: dict = None
+    ) -> list[BaseModel]:
         body = {"from": page_number * page_size, "size": page_size}
         if query:
             body = body | query
@@ -116,10 +115,7 @@ class BaseService:
             index=self.es_index,
             body=body
         )
-        result = []
-        for d in docs['hits']['hits']:
-            result.append(self.model(**d['_source']))
-        return result
+        return [self.model(**d['_source']) for d in docs['hits']['hits']]
 
     async def _put_list_to_cache(
             self, page_number: int, page_size: int, prefix: str,
