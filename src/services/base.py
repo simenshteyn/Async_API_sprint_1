@@ -7,12 +7,9 @@ from pydantic.json import pydantic_encoder
 
 
 class BaseService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch,
-                 es_index: str, model: BaseModel):
+    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
         self.elastic = elastic
-        self.es_index = es_index
-        self.model = model
 
     async def _get_by_id(
             self, id: str, cach_expire: int) -> BaseModel:

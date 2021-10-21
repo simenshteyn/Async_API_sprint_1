@@ -13,6 +13,8 @@ PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class PersonService(BaseService):
+    es_index = 'person'
+    model = Person
 
     async def get_by_id(self, person_id: str) -> Person:
         return await self._get_by_id(person_id, PERSON_CACHE_EXPIRE_IN_SECONDS)
@@ -32,4 +34,4 @@ def get_person_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic, 'person', Person)
+    return PersonService(redis, elastic)

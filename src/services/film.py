@@ -13,6 +13,8 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class FilmService(BaseService):
+    es_index = 'movies'
+    model = Film
 
     async def get_film_by_id(self, film_id: str) -> Film:
         return await self._get_by_id(film_id, FILM_CACHE_EXPIRE_IN_SECONDS)
@@ -90,4 +92,4 @@ class FilmService(BaseService):
 def get_film_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic)) -> FilmService:
-    return FilmService(redis, elastic, 'movies', Film)
+    return FilmService(redis, elastic)

@@ -13,6 +13,8 @@ GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class GenreService(BaseService):
+    es_index = 'genre'
+    model = Genre
 
     async def get_by_id(self, genre_id: str) -> Genre:
         return await self._get_by_id(genre_id, GENRE_CACHE_EXPIRE_IN_SECONDS)
@@ -28,4 +30,4 @@ def get_genre_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
-    return GenreService(redis, elastic, 'genre', Genre)
+    return GenreService(redis, elastic)
