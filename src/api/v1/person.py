@@ -41,14 +41,6 @@ async def person_list(
                    birth_date=person.birth_date,
                    role=person.role,
                    film_ids=person.film_ids) for person in person_list]
-    # result = []
-    # for person in person_list:
-    #     result.append(Person(id=person.id,
-    #                          full_name=person.full_name,
-    #                          birth_date=person.birth_date,
-    #                          role=person.role,
-    #                          film_ids=person.film_ids))
-    # return result
 
 
 @router.get('/search/{person_search_string}', response_model=list[Person],
