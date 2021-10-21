@@ -15,32 +15,15 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 class FilmService(BaseService):
 
     async def get_film_by_id(self, film_id: str) -> Film:
-        film = await self._get_by_id_from_cache(film_id, Film)
-        if not film:
-            film = await self._get_by_id_from_elastic(film_id, 'movies', Film)
-            if not film:
-                return None
-            await self._put_by_id_to_cache(film, FILM_CACHE_EXPIRE_IN_SECONDS)
-        return film
+        return await self._get_by_id(film_id, FILM_CACHE_EXPIRE_IN_SECONDS)
 
-    async def get_film_by_search(self,
-                                 search_string: str) -> list[Film]:
-        film_list = await self._get_by_search_from_cache('film',
-                                                         search_string, Film)
-        if not film_list:
-            film_list = await self._get_by_search_from_elastic(
-                'movies', search_string, 'title', Film)
-            if not film_list:
-                return None
-            await self._put_by_search_to_cache('film',
-                                               search_string,
-                                               film_list,
-                                               FILM_CACHE_EXPIRE_IN_SECONDS)
-        return film_list
+    async def get_film_by_search(self, search_string: str) -> list[Film]:
+        return await self._get_by_search(search_string, 'title',
+                                         FILM_CACHE_EXPIRE_IN_SECONDS)
 
-    async def get_film_sorted(self, sort_field: str, sort_type: str,
-                              filter_genre: str, page_number: int,
-                              page_size: int) -> list[Film]:
+    async def get_film_sorted(
+            self, sort_field: str, sort_type: str, filter_genre: str,
+            page_number: int, page_size: int) -> list[Film]:
         query = {"sort": {sort_field: sort_type}}
         if filter_genre:
             query = query | {
@@ -48,29 +31,26 @@ class FilmService(BaseService):
         film_list = await self._get_list_from_cache(
             page_number,
             page_size,
-            f'{sort_field}:{sort_type}:{filter_genre}:films',
-            Film
+            f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
         )
         if not film_list:
             film_list = await self._get_list_from_elastic(page_number,
-                                                          page_size, 'movies',
-                                                          Film, query=query)
+                                                          page_size,
+                                                          query=query)
             if not film_list:
                 return None
             await self._put_list_to_cache(
                 page_number,
                 page_size,
-                f'{sort_field}:{sort_type}:{filter_genre}:films',
+                f'{sort_field}:{sort_type}:{filter_genre}:{self.es_index}',
                 film_list,
                 FILM_CACHE_EXPIRE_IN_SECONDS
             )
         return film_list
 
     async def get_film_alike(self, film_id: str) -> list[Film]:
-        film_list = await self._get_list_from_cache(page_number=-1,
-                                                    page_size=-1,
-                                                    prefix=f'alike:{film_id}',
-                                                    model=Film)
+        film_list = await self._get_list_from_cache(
+            page_number=-1, page_size=-1, prefix=f'alike:{film_id}')
         if not film_list:
             film_list = await self._get_film_alike_from_elastic(film_id)
             if not film_list:
@@ -81,8 +61,7 @@ class FilmService(BaseService):
                                           expire=FILM_CACHE_EXPIRE_IN_SECONDS)
         return film_list
 
-    async def _get_film_alike_from_elastic(self, film_id: str
-                                           ) -> list[Film]:
+    async def _get_film_alike_from_elastic(self, film_id: str) -> list[Film]:
         film = await self.get_film_by_id(film_id)
         if not film or not film.genre:
             return None
@@ -111,4 +90,4 @@ class FilmService(BaseService):
 def get_film_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic)) -> FilmService:
-    return FilmService(redis, elastic)
+    return FilmService(redis, elastic, 'movies', Film)

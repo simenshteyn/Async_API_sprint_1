@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Optional
 
 import orjson
 
@@ -19,31 +20,31 @@ class Orjson(BaseModel):
 class Film(Orjson):
     id: str
     imdb_rating: float
-    genre: list[dict[str, str]] = None
+    genre: Optional[list[dict[str, str]]] = None
     title: str
-    description: str = None
-    director: list[dict[str, str]] = None
-    actors_names: list[str] = None
-    writers_names: list[str] = None
-    actors: list[dict[str, str]] = None
-    writers: list[dict[str, str]] = None
+    description: Optional[str] = None
+    director: Optional[list[dict[str, str]]] = None
+    actors_names: Optional[list[str]] = None
+    writers_names: Optional[list[str]] = None
+    actors: Optional[list[dict[str, str]]] = None
+    writers: Optional[list[dict[str, str]]] = None
 
 
 class FilmShort(BaseModel):
     id: str
     title: str
-    imdb_rating: float = None
+    imdb_rating: Optional[float] = None
 
 
 class Genre(Orjson):
     id: str
     name: str
-    description: str = None
+    description: Optional[str] = None
 
 
 class Person(Orjson):
     id: str
     full_name: str
-    birth_date: date = None
-    role: str = None
+    birth_date: Optional[date] = None
+    role: Optional[str] = None
     film_ids: list[str]
