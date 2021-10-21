@@ -36,14 +36,11 @@ async def person_list(
     if not person_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='persons not found')
-    result = []
-    for person in person_list:
-        result.append(Person(id=person.id,
-                             full_name=person.full_name,
-                             birth_date=person.birth_date,
-                             role=person.role,
-                             film_ids=person.film_ids))
-    return result
+    return [Person(id=person.id,
+                   full_name=person.full_name,
+                   birth_date=person.birth_date,
+                   role=person.role,
+                   film_ids=person.film_ids) for person in person_list]
 
 
 @router.get('/search/{person_search_string}', response_model=list[Person],
@@ -55,11 +52,8 @@ async def films_search(person_search_string: str,
     if not person_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='person not found')
-    result = []
-    for person in person_list:
-        result.append(Person(id=person.id,
-                             full_name=person.full_name,
-                             birth_date=person.birth_date,
-                             role=person.role,
-                             film_ids=person.film_ids))
-    return result
+    return [Person(id=person.id,
+                   full_name=person.full_name,
+                   birth_date=person.birth_date,
+                   role=person.role,
+                   film_ids=person.film_ids) for person in person_list]

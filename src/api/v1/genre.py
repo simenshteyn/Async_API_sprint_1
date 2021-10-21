@@ -34,9 +34,6 @@ async def genre_list(
     if not genre_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='genres not found')
-    result = []
-    for genre in genre_list:
-        result.append(Genre(id=genre.id,
-                            name=genre.name,
-                            description=genre.description))
-    return result
+    return [Genre(id=genre.id,
+                  name=genre.name,
+                  description=genre.description) for genre in genre_list]

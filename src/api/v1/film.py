@@ -32,12 +32,9 @@ async def films_sorted(sort: str = None,
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
-    result = []
-    for film in film_list:
-        result.append(FilmShort(id=film.id,
-                                title=film.title,
-                                imdb_rating=film.imdb_rating, ))
-    return result
+    return [FilmShort(id=film.id,
+                      title=film.title,
+                      imdb_rating=film.imdb_rating) for film in film_list]
 
 
 @router.get('/search/{film_search_string}', response_model=list[FilmShort],
@@ -49,12 +46,9 @@ async def films_search(film_search_string: str,
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film not found')
-    result = []
-    for film in film_list:
-        result.append(FilmShort(id=film.id,
-                                title=film.title,
-                                imdb_rating=film.imdb_rating, ))
-    return result
+    return [FilmShort(id=film.id,
+                      title=film.title,
+                      imdb_rating=film.imdb_rating) for film in film_list]
 
 
 @router.get('/{film_id}', response_model=Film,
@@ -87,12 +81,9 @@ async def film_alike(film_id: str,
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')
-    result = []
-    for film in film_list:
-        result.append(FilmShort(id=film.id,
-                                title=film.title,
-                                imdb_rating=film.imdb_rating, ))
-    return result
+    return [FilmShort(id=film.id,
+                      title=film.title,
+                      imdb_rating=film.imdb_rating) for film in film_list]
 
 
 @router.get('/genre/{genre_id}', response_model=list[FilmShort],
@@ -104,9 +95,6 @@ async def popular_in_genre(genre_id: str,
     if not film_list:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND,
                             detail='film alike not found')
-    result = []
-    for film in film_list:
-        result.append(FilmShort(id=film.id,
-                                title=film.title,
-                                imdb_rating=film.imdb_rating, ))
-    return result
+    return [FilmShort(id=film.id,
+                      title=film.title,
+                      imdb_rating=film.imdb_rating) for film in film_list]
